@@ -141,7 +141,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         return false
     }
 
-    override fun onAddressResolve(address1: String, address2: String) {
+    override fun onLocationResolve(address1: String, address2: String) {
         speak(address1 + ",   " + address2)
+    }
+
+    override fun onLocationError(error: String) {
+        speak(error)
     }
 }
