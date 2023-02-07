@@ -1,22 +1,18 @@
 package com.example.myapplication
 
-import android.Manifest
-import android.content.pm.PackageManager
+import android.R.attr.x
+import android.R.attr.y
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
+import android.widget.Button
+import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.yandex.mapkit.MapKitFactory
-import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.location.*
-import com.yandex.mapkit.search.SearchFactory
-import com.yandex.mapkit.search.SearchManager
-import com.yandex.mapkit.search.SearchManagerType
 import java.util.*
 
 
@@ -27,7 +23,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        //setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_main_circle2)
+        //layoutButtons()
+
         tts = TextToSpeech(this, this)
 
         MapKitFactory.initialize(this)
@@ -80,6 +79,13 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         super.onDestroy()
     }
 
+    fun layoutButtons() {
+        val params = RelativeLayout.LayoutParams(80, 80) // size of button in dp
+        val but6 = findViewById<Button>(R.id.button6)
+        params.setMargins(128, 128, 0, 0);
+        but6.layoutParams = params;
+    }
+
     fun speak(text: String) {
         if (ttsEnabled) {
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
@@ -105,18 +111,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         /*
         Toast.makeText(applicationContext, "Где я", Toast.LENGTH_SHORT).show()
         speak("Определем местоположение и смотрим, что есть рядом")
-
-        if (locator.location != null) {
-            val pos = locator.location!!.position
-            val accuracy = locator.location!!.accuracy
-            val msg = "Loc - " + pos.getLatitude() + "," + pos.getLongitude() + " (" +
-                    accuracy?.toInt() + ")"
-            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this@MainActivity, "Не удалось определить", Toast.LENGTH_SHORT).show()
-        }
     */
-        val msg = locator.getAddress()
+        val msg = locator.requestAddress()
         Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
     }

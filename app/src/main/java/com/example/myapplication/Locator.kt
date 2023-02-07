@@ -34,7 +34,7 @@ class Locator(val context: AppCompatActivity, val addressListener: OnAddressReso
     //    private set
 
     init {
-        requestLocationPermission();
+        requestLocationPermission()
     }
 
     /*
@@ -126,7 +126,7 @@ class Locator(val context: AppCompatActivity, val addressListener: OnAddressReso
         locationManager.unsubscribe(this)
     }
 
-    fun getAddress() : String {
+    fun requestAddress() : String {
         if (location != null) {
             searchManager.submit(location!!.position, 18, SearchOptions().apply { searchTypes = SearchType.GEO.value }, this )
             return "Определяем адрес..."
