@@ -92,6 +92,16 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         }
     }
 
+    fun onHelp(view: View) {
+        Toast.makeText(applicationContext, "Помощь", Toast.LENGTH_SHORT).show()
+        speak("Рассказываем, как пользоваться приложением")
+    }
+
+    fun notImplemented(view: View) {
+        Toast.makeText(applicationContext, "Нет функции", Toast.LENGTH_SHORT).show()
+        speak("Нет функции")
+    }
+
     fun goHome(view: View) {
         Toast.makeText(applicationContext, "Идем домой", Toast.LENGTH_SHORT).show()
         speak("Строим маршрут для движения домой")

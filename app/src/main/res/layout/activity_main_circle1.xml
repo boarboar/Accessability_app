@@ -74,7 +74,7 @@
         android:background="@drawable/roundbutton"
         android:contentDescription="Аптека"
         android:onClick="goDrugstore"
-        android:text="@string/btn_drugdtore_text"
+        android:text="@string/btn_drugstore_text_small"
         android:textColor="@color/gray"
         android:textSize="96sp"
         app:layout_constraintBottom_toTopOf="@+id/button9"

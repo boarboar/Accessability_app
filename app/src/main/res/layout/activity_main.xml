@@ -37,7 +37,7 @@
         android:layout_marginBottom="8dp"
         android:contentDescription="Аптека"
         android:onClick="goDrugstore"
-        android:text="@string/btn_drugdtore_text"
+        android:text="@string/btn_drugstore_text_small"
         android:textSize="96sp"
         android:textColor="@color/gray"
         app:layout_constraintBottom_toBottomOf="parent"
