@@ -1,36 +1,49 @@
 package com.example.myapplication
 
-import android.R.attr.x
-import android.R.attr.y
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import android.view.KeyEvent
-import android.view.View
+import android.view.*
 import android.widget.Button
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.yandex.mapkit.MapKitFactory
-import com.yandex.mapkit.location.*
 import java.util.*
 
+// TODO
+// Vibro - add logging and toast for testing
+// Attach to real device
+// Layout selector - Done
+// Call number
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddressResolveListenerInterface {
-    lateinit var tts: TextToSpeech
-    var ttsEnabled = false
-    lateinit var locator: Locator
+    private lateinit var tts: TextToSpeech
+    private var ttsEnabled = false
+    private  lateinit var locator: Locator
+    private lateinit var vibrator: Vibrator
+    private lateinit var round_view: View
+    private lateinit var square_view: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //setContentView(R.layout.activity_main)
-        setContentView(R.layout.activity_main_circle2)
-        //layoutButtons()
+        //setContentView(R.layout.activity_main_circle2)
+
+        round_view = layoutInflater.inflate(R.layout.activity_main_circle2, null)
+        square_view = layoutInflater.inflate(R.layout.activity_main, null)
+        setContentView(round_view)
 
         tts = TextToSpeech(this, this)
 
         MapKitFactory.initialize(this)
         locator = Locator(this, this)
+        vibrator = this.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
     }
 
@@ -79,12 +92,35 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         super.onDestroy()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater: MenuInflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle item selection
+        return when (item.itemId) {
+            R.id.round_layout -> {
+                setContentView(round_view)
+                true
+            }
+            R.id.square_layout -> {
+                setContentView(square_view);
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    /*
     fun layoutButtons() {
         val params = RelativeLayout.LayoutParams(80, 80) // size of button in dp
         val but6 = findViewById<Button>(R.id.button6)
         params.setMargins(128, 128, 0, 0);
         but6.layoutParams = params;
     }
+*/
 
     fun speak(text: String) {
         if (ttsEnabled) {
@@ -92,9 +128,50 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         }
     }
 
+    private fun createOneShotVibrationUsingVibrationEffect(milliseconds: Long) {
+        if (vibrator.hasVibrator()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // API 26
+                Log.i("VIB", "Use API 26")
+                vibrator.vibrate(
+                    VibrationEffect.createOneShot(
+                        milliseconds,
+                        VibrationEffect.DEFAULT_AMPLITUDE
+                    )
+                )
+            } else {
+                Log.i("VIB", "Use API < 26")
+                // This method was deprecated in API level 26
+                vibrator.vibrate(milliseconds)
+            }
+        }
+    }
+
+
+    private fun createWaveFormVibrationUsingVibrationEffectAndAmplitude() {
+        if (vibrator.hasVibrator()) {
+            val vibratePattern = longArrayOf(0, 400, 800, 600, 800, 800, 800, 1000)
+            val amplitudes = intArrayOf(0, 255, 0, 255, 0, 255, 0, 255)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // API 26
+                // -1 : Play exactly once
+                Log.i("VIB", "Use API 26")
+                if (vibrator.hasAmplitudeControl()) {
+                    val effect = VibrationEffect.createWaveform(vibratePattern, amplitudes, -1)
+                    vibrator.vibrate(effect)
+                }
+            } else {
+                // This method was deprecated in API level 26
+                Log.i("VIB", "Use API < 26")
+                vibrator.vibrate(vibratePattern, -1);
+            }
+        }
+    }
+
     fun onHelp(view: View) {
         Toast.makeText(applicationContext, "Помощь", Toast.LENGTH_SHORT).show()
         speak("Рассказываем, как пользоваться приложением")
+        createWaveFormVibrationUsingVibrationEffectAndAmplitude()
     }
 
     fun notImplemented(view: View) {
@@ -108,6 +185,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
     }
 
     fun goDrugstore(view: View) {
+        createOneShotVibrationUsingVibrationEffect(1000);
         Toast.makeText(applicationContext, "Идем в аптеку", Toast.LENGTH_SHORT).show()
         speak("Строим маршрут для движения в аптеку")
     }
@@ -126,7 +204,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
     }
-
+/*
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         super.onKeyUp(keyCode, event)
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
@@ -146,6 +224,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         }
         return false
     }
+*/
 
     override fun onLocationResolve(address1: String, address2: String) {
         speak(address1 + ",   " + address2)

@@ -1,0 +1,20 @@
+<!-- sample_menu.xml -->
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="Настройки"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item android:id="@+id/round_layout"
+                android:title="Круглый" />
+            <item android:id="@+id/square_layout"
+                android:title="Квадратный" />
+        </menu>
+
+    </item>
+
+</menu>

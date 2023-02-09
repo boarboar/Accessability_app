@@ -4,10 +4,10 @@
     <string name="btn_whereami_text"><font size="128">Г</font>\n\<font size="12">(где я?)</font></string>
     <string name="btn_drugdstore_text"><font size="128">A</font>\n\<font size="12">(аптека)</font></string>
     <string name="btn_calldoctor_text"><font size="128">В</font>\n\<font size="12">(звонить врачу!)</font></string>
-    <string name="btn_gohome_text_small"><font size="96">Д</font>\n\<font size="8">(домой)</font></string>
-    <string name="btn_drugstore_text_small"><font size="96">A</font>\n\<font size="8">(аптека)</font></string>
-    <string name="btn_whereami_text_small"><font size="96">Г</font>\n\<font size="8">(где я?)</font></string>
-    <string name="btn_calldoctor_text_small"><font size="96">В</font>\n\<font size="8">(врач!)</font></string>
-    <string name="btn_help_text_small"><font size="96">?</font></string>
-    <string name="btn_no_func_text_compact"><font size="80">-</font></string>
+    <string name="btn_gohome_text_small"><font size="88">Д</font>\n\<font size="8">(домой)</font></string>
+    <string name="btn_drugstore_text_small"><font size="88">A</font>\n\<font size="8">(аптека)</font></string>
+    <string name="btn_whereami_text_small"><font size="88">Г</font>\n\<font size="8">(где я?)</font></string>
+    <string name="btn_calldoctor_text_small"><font size="88">В</font>\n\<font size="8">(врач!)</font></string>
+    <string name="btn_help_text_small"><font size="88">?</font></string>
+    <string name="btn_no_func_text_compact"><font size="72">-</font></string>
 </resources>
