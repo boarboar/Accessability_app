@@ -1,6 +1,10 @@
 package com.example.myapplication
 
+import android.Manifest
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -8,13 +12,13 @@ import android.os.Vibrator
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.*
-import android.widget.Button
-import android.widget.RelativeLayout
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.yandex.mapkit.MapKitFactory
 import java.util.*
+
 
 // TODO
 // Vibro - add logging and toast for testing
@@ -29,6 +33,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
     private lateinit var vibrator: Vibrator
     private lateinit var round_view: View
     private lateinit var square_view: View
+    private val PERMISSIONS_REQUEST_CALL_PHONE = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +49,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         MapKitFactory.initialize(this)
         locator = Locator(this, this)
         vibrator = this.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        if (!vibrator.hasVibrator()) {
+            Log.e("VIB", "Has no vibrator")
+        }
 
+        requestCallPermission()
     }
 
     override fun onInit(status: Int) {
@@ -159,6 +168,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
                 if (vibrator.hasAmplitudeControl()) {
                     val effect = VibrationEffect.createWaveform(vibratePattern, amplitudes, -1)
                     vibrator.vibrate(effect)
+                } else {
+                    Log.e("VIB", "No Amp control")
                 }
             } else {
                 // This method was deprecated in API level 26
@@ -168,15 +179,48 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         }
     }
 
+    private fun createWaveFormVibrationUsingVibrationEffect() {
+        if (vibrator.hasVibrator()) {
+            val vibratePattern = longArrayOf(0, 400, 800, 600, 800, 800, 800, 1000)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // API 26
+                // -1 : Play exactly once
+                Log.i("VIB", "Use API 26")
+                val effect = VibrationEffect.createWaveform(vibratePattern,-1)
+                vibrator.vibrate(effect)
+            } else {
+                // This method was deprecated in API level 26
+                Log.i("VIB", "Use API < 26")
+                vibrator.vibrate(vibratePattern, -1);
+            }
+        }
+    }
+
+    private fun requestCallPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                "android.permission.CALL_PHONE"
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            /*
+            requestPermissionLauncher.launch(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) */
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.CALL_PHONE),
+                PERMISSIONS_REQUEST_CALL_PHONE
+            )
+        }
+    }
+
     fun onHelp(view: View) {
         Toast.makeText(applicationContext, "Помощь", Toast.LENGTH_SHORT).show()
         speak("Рассказываем, как пользоваться приложением")
-        createWaveFormVibrationUsingVibrationEffectAndAmplitude()
     }
 
     fun notImplemented(view: View) {
         Toast.makeText(applicationContext, "Нет функции", Toast.LENGTH_SHORT).show()
-        speak("Нет функции")
+        //speak("Нет функции")
+        createWaveFormVibrationUsingVibrationEffect()
     }
 
     fun goHome(view: View) {
@@ -191,8 +235,21 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
     }
 
     fun callDoctor(view: View) {
+        val phone_number = "060"
         Toast.makeText(applicationContext, "Звонить врачу", Toast.LENGTH_SHORT).show()
-        speak("Набираем телефон врача")
+        speak("Набираем телефон врача $phone_number")
+        // Getting instance of Intent with action as ACTION_CALL
+        // val phone_intent = Intent(Intent.ACTION_DIAL)
+        val phone_intent = Intent(Intent.ACTION_CALL)
+        // Set data of Intent through Uri by parsing phone number
+
+        // Set data of Intent through Uri by parsing phone number
+        phone_intent.data = Uri.parse("tel:$phone_number")
+
+        // start Intent
+
+        // start Intent
+        startActivity(phone_intent)
     }
 
     fun whereAmI(view: View) {
