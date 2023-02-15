@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentTransaction
 import com.yandex.mapkit.MapKitFactory
 import java.util.*
 
@@ -236,20 +237,20 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
 
     fun callDoctor(view: View) {
         val phone_number = "060"
-        Toast.makeText(applicationContext, "Звонить врачу", Toast.LENGTH_SHORT).show()
-        speak("Набираем телефон врача $phone_number")
-        // Getting instance of Intent with action as ACTION_CALL
-        // val phone_intent = Intent(Intent.ACTION_DIAL)
-        val phone_intent = Intent(Intent.ACTION_CALL)
-        // Set data of Intent through Uri by parsing phone number
+        speak("Вы собираетесь набрать номер $phone_number; Нажмите кнопку ДА сверху чтобы подтвердтить")
 
-        // Set data of Intent through Uri by parsing phone number
-        phone_intent.data = Uri.parse("tel:$phone_number")
-
-        // start Intent
-
-        // start Intent
-        startActivity(phone_intent)
+        val callDialog = YNDialogFragment()
+        callDialog.onYes = {
+            speak("звоню")
+            //val phone_intent = Intent(Intent.ACTION_CALL)
+            val phone_intent = Intent(Intent.ACTION_CALL)
+            phone_intent.data = Uri.parse("tel:$phone_number")
+            startActivity(phone_intent)
+        }
+        callDialog.onNo = {
+            speak("отбой")
+        }
+        callDialog.show(supportFragmentManager)
     }
 
     fun whereAmI(view: View) {

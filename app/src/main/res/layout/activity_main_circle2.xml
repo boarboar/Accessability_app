@@ -187,7 +187,6 @@
         android:contentDescription="Позвонить врачу"
         android:onClick="callDoctor"
         android:text="@string/btn_calldoctor_text_small"
-        android:textColor="@color/gray"
         android:textSize="96sp"
         android:padding="0dp"
         app:layout_constraintDimensionRatio="1:1"
