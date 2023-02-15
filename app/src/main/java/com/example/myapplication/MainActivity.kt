@@ -22,16 +22,14 @@ import java.util.*
 
 
 // TODO
-// Vibro - add logging and toast for testing
-// Attach to real device
-// Layout selector - Done
-// Call number
+// YNDialog resize & transparency
+// buttons - borders & colours
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddressResolveListenerInterface {
     private lateinit var tts: TextToSpeech
     private var ttsEnabled = false
     private  lateinit var locator: Locator
-    private lateinit var vibrator: Vibrator
+    private lateinit var vibrator: Vibro
     private lateinit var round_view: View
     private lateinit var square_view: View
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
@@ -49,10 +47,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
 
         MapKitFactory.initialize(this)
         locator = Locator(this, this)
-        vibrator = this.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        if (!vibrator.hasVibrator()) {
-            Log.e("VIB", "Has no vibrator")
-        }
+        vibrator = Vibro(this)
 
         requestCallPermission()
     }
@@ -77,7 +72,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
             Toast.makeText(this@MainActivity, "TTS enabled", Toast.LENGTH_SHORT).show()
         }
     }
-
 
     override fun onStart() {
         super.onStart()
@@ -138,65 +132,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         }
     }
 
-    private fun createOneShotVibrationUsingVibrationEffect(milliseconds: Long) {
-        if (vibrator.hasVibrator()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // API 26
-                Log.i("VIB", "Use API 26")
-                vibrator.vibrate(
-                    VibrationEffect.createOneShot(
-                        milliseconds,
-                        VibrationEffect.DEFAULT_AMPLITUDE
-                    )
-                )
-            } else {
-                Log.i("VIB", "Use API < 26")
-                // This method was deprecated in API level 26
-                vibrator.vibrate(milliseconds)
-            }
-        }
-    }
-
-
-    private fun createWaveFormVibrationUsingVibrationEffectAndAmplitude() {
-        if (vibrator.hasVibrator()) {
-            val vibratePattern = longArrayOf(0, 400, 800, 600, 800, 800, 800, 1000)
-            val amplitudes = intArrayOf(0, 255, 0, 255, 0, 255, 0, 255)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // API 26
-                // -1 : Play exactly once
-                Log.i("VIB", "Use API 26")
-                if (vibrator.hasAmplitudeControl()) {
-                    val effect = VibrationEffect.createWaveform(vibratePattern, amplitudes, -1)
-                    vibrator.vibrate(effect)
-                } else {
-                    Log.e("VIB", "No Amp control")
-                }
-            } else {
-                // This method was deprecated in API level 26
-                Log.i("VIB", "Use API < 26")
-                vibrator.vibrate(vibratePattern, -1);
-            }
-        }
-    }
-
-    private fun createWaveFormVibrationUsingVibrationEffect() {
-        if (vibrator.hasVibrator()) {
-            val vibratePattern = longArrayOf(0, 400, 800, 600, 800, 800, 800, 1000)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // API 26
-                // -1 : Play exactly once
-                Log.i("VIB", "Use API 26")
-                val effect = VibrationEffect.createWaveform(vibratePattern,-1)
-                vibrator.vibrate(effect)
-            } else {
-                // This method was deprecated in API level 26
-                Log.i("VIB", "Use API < 26")
-                vibrator.vibrate(vibratePattern, -1);
-            }
-        }
-    }
-
     private fun requestCallPermission() {
         if (ContextCompat.checkSelfPermission(this,
                 "android.permission.CALL_PHONE"
@@ -221,7 +156,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
     fun notImplemented(view: View) {
         Toast.makeText(applicationContext, "Нет функции", Toast.LENGTH_SHORT).show()
         //speak("Нет функции")
-        createWaveFormVibrationUsingVibrationEffect()
+        vibrator.createWaveFormVibrationUsingVibrationEffect()
     }
 
     fun goHome(view: View) {
@@ -230,7 +165,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
     }
 
     fun goDrugstore(view: View) {
-        createOneShotVibrationUsingVibrationEffect(1000);
+        vibrator.createOneShotVibrationUsingVibrationEffect(1000);
         Toast.makeText(applicationContext, "Идем в аптеку", Toast.LENGTH_SHORT).show()
         speak("Строим маршрут для движения в аптеку")
     }
