@@ -1,12 +1,12 @@
 package com.example.myapplication
 
 
-import android.app.Activity
 import android.app.Dialog
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
-import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
@@ -21,7 +21,7 @@ class YNDialogFragment() : DialogFragment() {
         savedInstanceState: Bundle?
     ): View {
         // Inflate the layout to use as dialog or embedded fragment
-        val view =  inflater.inflate(R.layout.dialog_yes_no, container, false)
+        val view =  inflater.inflate(R.layout.dialog_yes_no_1, container, false)
         val btnOK : Button = view.findViewById(R.id.button_ok)
         val btnNO : Button = view.findViewById(R.id.button_no)
         btnOK.setOnClickListener {
@@ -36,16 +36,18 @@ class YNDialogFragment() : DialogFragment() {
     }
 
     /** The system calls this only when creating the layout in a dialog. */
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         // The only reason you might override this method when using onCreateView() is
         // to modify any dialog characteristics. For example, the dialog includes a
         // title by default, but your custom layout might not need it. So here you can
         // remove the dialog title, but you must call the superclass to get the Dialog.
         val dialog = super.onCreateDialog(savedInstanceState)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        //dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        //setStyle(STYLE_NO_FRAME, android.R.style.Theme_Holo_Light);
+        setStyle(DialogFragment.STYLE_NO_FRAME, R.style.FullScreenDialog)
         return dialog
     }
-
 
     fun show(supportFragmentManager: FragmentManager) {
         val fragmentManager = supportFragmentManager

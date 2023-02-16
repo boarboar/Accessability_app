@@ -24,6 +24,7 @@ import java.util.*
 // TODO
 // YNDialog resize & transparency
 // buttons - borders & colours
+// Drugstore - green A, doctor - red bold +
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddressResolveListenerInterface {
     private lateinit var tts: TextToSpeech
