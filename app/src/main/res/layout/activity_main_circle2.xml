@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:backgroundTintMode="src_atop"
     tools:context=".MainActivity">
 
     <Button
@@ -16,14 +17,14 @@
         android:layout_marginBottom="@dimen/default_margin"
         android:background="@drawable/roundbutton"
         android:contentDescription="Домой"
+        android:hapticFeedbackEnabled="true"
         android:onClick="goHome"
+        android:padding="0dp"
         android:text="@string/btn_gohome_text_small"
         android:textColor="@color/gray"
         android:textSize="96sp"
-        android:padding="0dp"
-        android:hapticFeedbackEnabled="true"
-        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintBottom_toTopOf="@+id/button10"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toStartOf="@+id/button7"
         app:layout_constraintStart_toEndOf="@+id/button8"
         app:layout_constraintTop_toTopOf="parent" />
@@ -42,12 +43,12 @@
         android:text="@string/btn_no_func_text_compact"
         android:textColor="@color/gray"
         android:textSize="96sp"
-        app:layout_constraintHorizontal_bias="0.75"
-        app:layout_constraintVertical_bias="0.85"
         app:layout_constraintBottom_toTopOf="@+id/button10"
         app:layout_constraintEnd_toStartOf="@+id/button6"
+        app:layout_constraintHorizontal_bias="0.95"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.85" />
 
     <Button
         android:id="@+id/button11"
@@ -63,13 +64,13 @@
         android:text="@string/btn_no_func_text_compact"
         android:textColor="@color/gray"
         android:textSize="96sp"
-        app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintHorizontal_bias="0.25"
-        app:layout_constraintVertical_bias="0.85"
         app:layout_constraintBottom_toTopOf="@+id/button10"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintStart_toEndOf="@+id/button6"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.85" />
 
     <Button
         android:id="@+id/button8"
@@ -80,13 +81,14 @@
         android:layout_marginEnd="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"
         android:background="@drawable/roundbutton"
+        app:backgroundTint="@color/green"
         android:contentDescription="Аптека"
         android:gravity="center"
         android:onClick="goDrugstore"
+        android:padding="0dp"
         android:text="@string/btn_drugstore_text_small"
         android:textColor="@color/gray"
         android:textSize="96sp"
-        android:padding="0dp"
         app:layout_constraintBottom_toTopOf="@+id/button9"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toStartOf="@+id/button10"
@@ -105,8 +107,8 @@
         android:contentDescription="Помощь"
         android:gravity="center"
         android:onClick="onHelp"
-        android:text="@string/btn_help_text_small"
         android:padding="0dp"
+        android:text="@string/btn_help_text_small"
         app:layout_constraintBottom_toTopOf="@+id/button9"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toStartOf="@+id/button7"
@@ -124,11 +126,11 @@
         android:background="@drawable/roundbutton"
         android:contentDescription="Где я?"
         android:onClick="whereAmI"
+        android:padding="0dp"
         android:text="@string/btn_whereami_text_small"
         android:textSize="96sp"
-        android:padding="0dp"
-        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintBottom_toTopOf="@+id/button9"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/button10"
         app:layout_constraintTop_toBottomOf="@+id/button6" />
@@ -147,12 +149,12 @@
         android:text="@string/btn_no_func_text_compact"
         android:textColor="@color/gray"
         android:textSize="96sp"
-        app:layout_constraintHorizontal_bias="0.75"
-        app:layout_constraintVertical_bias="0.15"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button9"
+        app:layout_constraintHorizontal_bias="0.95"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button10" />
+        app:layout_constraintTop_toBottomOf="@+id/button10"
+        app:layout_constraintVertical_bias="0.15" />
 
     <Button
         android:id="@+id/button14"
@@ -168,12 +170,12 @@
         android:text="@string/btn_no_func_text_compact"
         android:textColor="@color/gray"
         android:textSize="96sp"
-        app:layout_constraintHorizontal_bias="0.25"
-        app:layout_constraintVertical_bias="0.15"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintStart_toEndOf="@+id/button10"
-        app:layout_constraintTop_toBottomOf="@+id/button10" />
+        app:layout_constraintTop_toBottomOf="@+id/button10"
+        app:layout_constraintVertical_bias="0.15" />
 
     <Button
         android:id="@+id/button9"
@@ -184,13 +186,14 @@
         android:layout_marginEnd="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"
         android:background="@drawable/roundbutton"
+        app:backgroundTint="@color/red"
         android:contentDescription="Позвонить врачу"
         android:onClick="callDoctor"
+        android:padding="0dp"
         android:text="@string/btn_calldoctor_text_small"
         android:textSize="96sp"
-        android:padding="0dp"
-        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toStartOf="@+id/button7"
         app:layout_constraintStart_toEndOf="@+id/button8"
         app:layout_constraintTop_toBottomOf="@+id/button10" />

@@ -2,7 +2,7 @@
     <string name="app_name">Помошник слабовидящих</string>
     <string name="btn_gohome_text"><font size="128">Д</font>\n\<font size="12">(идем домой!)</font></string>
     <string name="btn_whereami_text"><font size="128">Г</font>\n\<font size="12">(где я?)</font></string>
-    <string name="btn_drugdstore_text"><font size="128">A</font>\n\<font size="12">(аптека)</font></string>
+    <string name="btn_drugstore_text"><font size="128">A</font>\n\<font size="12">(аптека)</font></string>
     <string name="btn_calldoctor_text"><font size="128">В</font>\n\<font size="12">(звонить врачу!)</font></string>
     <string name="btn_gohome_text_small"><font size="88">Д</font>\n\<font size="8">(домой)</font></string>
     <string name="btn_drugstore_text_small"><font size="88">A</font>\n\<font size="8">(аптека)</font></string>
