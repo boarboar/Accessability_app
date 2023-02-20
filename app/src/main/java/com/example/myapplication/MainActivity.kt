@@ -20,13 +20,7 @@ import androidx.fragment.app.FragmentTransaction
 import com.yandex.mapkit.MapKitFactory
 import java.util.*
 
-
-// TODO
-// YNDialog resize & transparency
-// buttons - borders & colours
-// Drugstore - green A, doctor - red bold +
-
-class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddressResolveListenerInterface {
+class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var tts: TextToSpeech
     private var ttsEnabled = false
     private  lateinit var locator: Locator
@@ -47,7 +41,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         tts = TextToSpeech(this, this)
 
         MapKitFactory.initialize(this)
-        locator = Locator(this, this)
+        locator = Locator(this/*, this*/)
         vibrator = Vibro(this)
 
         requestCallPermission()
@@ -166,9 +160,12 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
     }
 
     fun goDrugstore(view: View) {
-        vibrator.createOneShotVibrationUsingVibrationEffect(1000);
-        Toast.makeText(applicationContext, "Идем в аптеку", Toast.LENGTH_SHORT).show()
-        speak("Строим маршрут для движения в аптеку")
+        //vibrator.createOneShotVibrationUsingVibrationEffect(1000);
+        //Toast.makeText(applicationContext, "Идем в аптеку", Toast.LENGTH_SHORT).show()
+        //speak("Строим маршрут для движения в аптеку")
+        val msg = locator.search("аптека", {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
+        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+        speak(msg)
     }
 
     fun callDoctor(view: View) {
@@ -194,11 +191,23 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
         Toast.makeText(applicationContext, "Где я", Toast.LENGTH_SHORT).show()
         speak("Определем местоположение и смотрим, что есть рядом")
     */
-        val msg = locator.requestAddress()
+        //val msg = locator.requestAddress()
+        val msg = locator.requestAddress1({a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
         Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
     }
-/*
+
+    fun onLocationResolve(address1: String, address2: String) {
+        Toast.makeText(this@MainActivity, address1 + ",   " + address2, Toast.LENGTH_SHORT).show()
+        speak(address1 + ",   " + address2)
+    }
+
+    fun onLocationError(error: String) {
+        Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
+        speak(error)
+    }
+
+    /*
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         super.onKeyUp(keyCode, event)
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
@@ -220,11 +229,4 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener, OnAddress
     }
 */
 
-    override fun onLocationResolve(address1: String, address2: String) {
-        speak(address1 + ",   " + address2)
-    }
-
-    override fun onLocationError(error: String) {
-        speak(error)
-    }
 }

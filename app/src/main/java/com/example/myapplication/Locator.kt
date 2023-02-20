@@ -9,18 +9,46 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.yandex.mapkit.MapKitFactory
+import com.yandex.mapkit.geometry.Geometry
 import com.yandex.mapkit.location.*
 import com.yandex.mapkit.search.*
 import com.yandex.mapkit.search.Session.SearchListener
 import com.yandex.runtime.Error
 
-interface OnAddressResolveListenerInterface {
-    fun onLocationResolve(address1: String, address2: String)
-    fun onLocationError(error: String)
+class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -> Unit, val onFailure : (error : String) -> Unit ) : SearchListener {
+    private val TAG = "SLP"
+    override fun onSearchResponse(p0: Response) {
+        if(p0.collection.children.size > 0) {
+            val data = p0.collection.children[0].obj
+            data?.let {
+                Log.w(TAG, it.name ?: "Address not available") // street
+                Log.w(TAG, it.descriptionText ?: "Address1 not available") // city
+                //Toast.makeText(context, it!!.name ?: "Address not available", Toast.LENGTH_SHORT).show()
+                if (it.name != null) {
+                    onSuccess(it.name!!, it.descriptionText ?: "")
+                } else {
+                    onFailure("Нет имени")
+                }
+            }
+            p0.collection.children.forEach {
+                if (it.obj != null) {
+                    Log.w("MapKit", "Name:" + it.obj!!.name ?: "")
+                    Log.w("MapKit", "Desc:" + it.obj!!.descriptionText ?: "")
+                }
+            }
+        } else {
+            onFailure("Поиск не вернул результатов")
+        }
+    }
+
+    override fun onSearchError(p0: Error) {
+        //Toast.makeText(context, "Ошибка поиска", Toast.LENGTH_SHORT).show()
+        Log.e(TAG, p0.toString())
+        onFailure("Ошибка поиска")
+    }
 }
 
-
-class Locator(val context: AppCompatActivity, val addressListener: OnAddressResolveListenerInterface) : LocationListener, SearchListener {
+class Locator(val context: AppCompatActivity) : LocationListener {
     private val PERMISSIONS_REQUEST_FINE_LOCATION = 1
     private val DESIRED_ACCURACY = 5.0
     private val MINIMAL_TIME: Long = 10000
@@ -50,51 +78,17 @@ class Locator(val context: AppCompatActivity, val addressListener: OnAddressReso
 */
 
     override fun onLocationUpdated(location: Location) {
-        if (location != null) {
-            val pos = location.position
-            val msg = "" + pos.getLatitude() + "," + pos.getLongitude() + " (" +
-                    location.accuracy?.toInt() + ")"
-            Log.w(TAG, msg)
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-            this.location = location
-        }
+        val pos = location.position
+        val msg = "" + pos.getLatitude() + "," + pos.getLongitude() + " (" +
+                location.accuracy?.toInt() + ")"
+        Log.w(TAG, msg)
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        this.location = location
     }
     override fun onLocationStatusUpdated(locationStatus: LocationStatus) {
         if (locationStatus == LocationStatus.NOT_AVAILABLE) { Log.w("MapKit", "Loc not avail")
             Toast.makeText(context, "Loc not avail", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    override fun onSearchResponse(p0: Response) {
-        if(p0.collection.children.size > 0) {
-            val data = p0.collection.children[0].obj
-            data?.let {
-                Log.w(TAG, it.name ?: "Address not available") // street
-                Log.w(TAG, it.descriptionText ?: "Address1 not available") // city
-                Toast.makeText(context, it!!.name ?: "Address not available", Toast.LENGTH_SHORT).show()
-                if (it.name != null) {
-                    addressListener.onLocationResolve(it.name!!, it.descriptionText ?: "")
-                } else {
-                    addressListener.onLocationError("Нет имени")
-                }
-            }
-        } else {
-            addressListener.onLocationError("Поиск не вернул результатов")
-        }
-        /*
-        p0.collection.children.forEach {
-            if (it.obj != null) {
-                Log.w("MapKit", "Name:" + it.obj!!.name ?: "")
-                Log.w("MapKit", "Desc:" + it.obj!!.descriptionText ?: "")
-            }
-        }
-        */
-    }
-
-    override fun onSearchError(p0: Error) {
-        Toast.makeText(context, "Ошибка поиска", Toast.LENGTH_SHORT).show()
-        Log.e(TAG, p0.toString())
-        addressListener.onLocationError("Ошибка поиска")
     }
 
     private fun requestLocationPermission() {
@@ -126,13 +120,21 @@ class Locator(val context: AppCompatActivity, val addressListener: OnAddressReso
         locationManager.unsubscribe(this)
     }
 
-    fun requestAddress() : String {
+    fun requestAddress1(onSuccess : (address1: String, address2: String) -> Unit, onFailure : (error : String) -> Unit ) : String {
         if (location != null) {
-            searchManager.submit(location!!.position, 18, SearchOptions().apply { searchTypes = SearchType.GEO.value }, this )
+            searchManager.submit(location!!.position, 18, SearchOptions().apply { searchTypes = SearchType.GEO.value }, SearchListenerProxy(onSuccess, onFailure) )
             return "Определяем адрес..."
         } else {
             return "Местоположение определяется, попробуйте повторить через несколько секунд"
         }
     }
 
+    fun search(query: String, onSuccess : (address1: String, address2: String) -> Unit, onFailure : (error : String) -> Unit ) : String {
+        if (location != null) {
+            searchManager.submit(query, Geometry.fromPoint(location!!.position), SearchOptions(), SearchListenerProxy(onSuccess, onFailure) )
+            return "Определяем ближайшие объекты $query"
+        } else {
+            return "Местоположение определяется, попробуйте повторить через несколько секунд"
+        }
+    }
 }
