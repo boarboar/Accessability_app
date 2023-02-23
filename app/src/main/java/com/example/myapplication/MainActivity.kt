@@ -15,8 +15,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
 import com.yandex.mapkit.MapKitFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -203,24 +205,36 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             val pos = loc.position
             // launching a new coroutine
             GlobalScope.launch {
-                // need to fix it to interact with UI
+                var addressString : String? = null
+                var addressStringFull : String? = null
                 //"12 к2" -> "12 корп 2"
-                //Looper.prepare() // this is to be able to show toast other from uiThread
-                // crash if no internet
-                val result = geocodeApi.getReverseGeocode(pos.longitude, pos.latitude)
-                if (result != null && result.body() != null) {
-                    // Checking the results
-                    val address = result.body()!!.address
-                    var house = address.house_number
-                    if (house == null)
-                        house = address.building
-                    Log.d("GEO", result.body()!!.display_name)
-                    Log.d("GEO", address.toString())
-                    //Toast.makeText(this@MainActivity, result.body()!!.display_name, Toast.LENGTH_SHORT).show()
-                    speak("${address.road} ${house}")
-                } else {
-                    Log.e("GEO", "Failed with $result")
-                    speak("Невозможно определить адрес")
+                try {
+                    //val result = geocodeApi.getReverseGeocodeTest();
+                    val result = geocodeApi.getReverseGeocode(pos.longitude, pos.latitude)
+                    if (result != null && result.body() != null) {
+                        // Checking the results
+                        val address = result.body()!!.address
+                        var house = address.house_number
+                        if (house == null)
+                            house = address.building
+                        Log.d("GEO", result.body()!!.display_name)
+                        Log.d("GEO", address.toString())
+                        addressString = "${address.road} ${house}"
+                        addressStringFull = result.body()!!.display_name
+                    } else {
+                        Log.e("GEO", "Failed with $result")
+                    }
+                } catch (e: Throwable) {
+                    Log.e("GEO", e.toString())
+                }
+                // showing results in UI
+                withContext(Dispatchers.Main) {
+                    if (addressString != null) {
+                        Toast.makeText(this@MainActivity, addressStringFull, Toast.LENGTH_LONG).show()
+                        speak(addressString!!)
+                    } else {
+                        speak("Невозможно определить адрес")
+                    }
                 }
             }
         } else
