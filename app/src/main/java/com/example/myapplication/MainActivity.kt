@@ -5,10 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
+import android.os.*
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.*
@@ -18,6 +15,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
 import com.yandex.mapkit.MapKitFactory
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -27,6 +26,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var vibrator: Vibro
     private lateinit var round_view: View
     private lateinit var square_view: View
+    private val geocodeApi = RetrofitHelper.getInstance().create(QuotesApi::class.java)
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -191,10 +191,41 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         Toast.makeText(applicationContext, "Где я", Toast.LENGTH_SHORT).show()
         speak("Определем местоположение и смотрим, что есть рядом")
     */
-        //val msg = locator.requestAddress()
+    /*
+        // Yandex implementation
         val msg = locator.requestAddress1({a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
         Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
+     */
+        // OSM implementation
+        val loc = locator.location
+        if (loc != null) {
+            val pos = loc.position
+            // launching a new coroutine
+            GlobalScope.launch {
+                // need to fix it to interact with UI
+                //"12 к2" -> "12 корп 2"
+                //Looper.prepare() // this is to be able to show toast other from uiThread
+                // crash if no internet
+                val result = geocodeApi.getReverseGeocode(pos.longitude, pos.latitude)
+                if (result != null && result.body() != null) {
+                    // Checking the results
+                    val address = result.body()!!.address
+                    var house = address.house_number
+                    if (house == null)
+                        house = address.building
+                    Log.d("GEO", result.body()!!.display_name)
+                    Log.d("GEO", address.toString())
+                    //Toast.makeText(this@MainActivity, result.body()!!.display_name, Toast.LENGTH_SHORT).show()
+                    speak("${address.road} ${house}")
+                } else {
+                    Log.e("GEO", "Failed with $result")
+                    speak("Невозможно определить адрес")
+                }
+            }
+        } else
+            speak("Местоположение определяется, попробуйте повторить через несколько секунд")
+
     }
 
     fun onLocationResolve(address1: String, address2: String) {
