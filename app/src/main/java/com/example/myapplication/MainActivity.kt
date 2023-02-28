@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var vibrator: Vibro
     private lateinit var round_view: View
     private lateinit var square_view: View
-    private val geocodeApi = RetrofitHelper.getInstance().create(QuotesApi::class.java)
+    private val geocodeApi = RetrofitHelper.getInstance().create(GeocoderApi::class.java)
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +45,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         MapKitFactory.initialize(this)
         locator = Locator(this/*, this*/)
         vibrator = Vibro(this)
-
         requestCallPermission()
     }
 
@@ -114,15 +113,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
-    /*
-    fun layoutButtons() {
-        val params = RelativeLayout.LayoutParams(80, 80) // size of button in dp
-        val but6 = findViewById<Button>(R.id.button6)
-        params.setMargins(128, 128, 0, 0);
-        but6.layoutParams = params;
-    }
-*/
-
     fun speak(text: String) {
         if (ttsEnabled) {
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
@@ -134,10 +124,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 "android.permission.CALL_PHONE"
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            /*
-            requestPermissionLauncher.launch(
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) */
             ActivityCompat.requestPermissions(
                 this, arrayOf(Manifest.permission.CALL_PHONE),
                 PERMISSIONS_REQUEST_CALL_PHONE
@@ -207,7 +193,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             GlobalScope.launch {
                 var addressString : String? = null
                 var addressStringFull : String? = null
-                //"12 к2" -> "12 корп 2"
                 try {
                     //val result = geocodeApi.getReverseGeocodeTest();
                     val result = geocodeApi.getReverseGeocode(pos.longitude, pos.latitude)
@@ -217,6 +202,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         var house = address.house_number
                         if (house == null)
                             house = address.building
+                        else
+                            house = house.replace(" к", " корпус ") //"12 к2" -> "12 корп 2"
                         Log.d("GEO", result.body()!!.display_name)
                         Log.d("GEO", address.toString())
                         addressString = "${address.road} ${house}"

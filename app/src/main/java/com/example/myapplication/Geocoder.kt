@@ -13,7 +13,7 @@ data class ReverseGeocodeAddress(val house_number : String, val building : Strin
                                  val region: String, val postcode: String, val country: String);
 
 
-interface QuotesApi {
+interface GeocoderApi {
     @GET("/reverse?lon=30.496880&lat=59.920199&accept-language=Ru_ru&format=json")
     suspend fun getReverseGeocodeTest() : Response<ReverseGeocodeResult>
     @GET("/reverse?accept-language=Ru_ru&format=json")
