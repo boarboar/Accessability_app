@@ -15,6 +15,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
 import com.yandex.mapkit.MapKitFactory
+import com.yandex.mapkit.geometry.Point
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -143,8 +144,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun goHome(view: View) {
-        Toast.makeText(applicationContext, "Идем домой", Toast.LENGTH_SHORT).show()
-        speak("Строим маршрут для движения домой")
+        //Toast.makeText(applicationContext, "Идем домой", Toast.LENGTH_SHORT).show()
+        //speak("Строим маршрут для движения домой")
+        val msg = locator.makeRoute(Point(59.920199, 30.496880))
+        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
+        speak(msg)
     }
 
     fun goDrugstore(view: View) {

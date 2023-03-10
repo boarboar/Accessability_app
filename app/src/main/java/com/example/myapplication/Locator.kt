@@ -1,7 +1,6 @@
 package com.example.myapplication
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
@@ -9,10 +8,21 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.yandex.mapkit.MapKitFactory
+import com.yandex.mapkit.RequestPoint
+import com.yandex.mapkit.RequestPointType
 import com.yandex.mapkit.geometry.Geometry
-import com.yandex.mapkit.location.*
+import com.yandex.mapkit.geometry.Point
+import com.yandex.mapkit.geometry.PolylinePosition
+import com.yandex.mapkit.location.FilteringMode
+import com.yandex.mapkit.location.Location
+import com.yandex.mapkit.location.LocationListener
+import com.yandex.mapkit.location.LocationStatus
 import com.yandex.mapkit.search.*
 import com.yandex.mapkit.search.Session.SearchListener
+import com.yandex.mapkit.transport.TransportFactory
+import com.yandex.mapkit.transport.masstransit.Route
+import com.yandex.mapkit.transport.masstransit.Session
+import com.yandex.mapkit.transport.masstransit.TimeOptions
 import com.yandex.runtime.Error
 
 class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -> Unit, val onFailure : (error : String) -> Unit ) : SearchListener {
@@ -48,6 +58,40 @@ class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -
     }
 }
 
+class RouterProxy() : Session.RouteListener {
+    private val TAG = "SRP"
+    override fun onMasstransitRoutes(p0: MutableList<Route>) {
+        if (p0.size > 0) {
+            val route = p0[0]
+
+            val points = route.geometry.points
+            val metadata = route.metadata
+            Log.i(TAG, "Route from: ${metadata.wayPoints[0]} time: ${metadata.wayPoints[metadata.wayPoints.size-1]}")
+            Log.i(TAG, "Route time: ${metadata.estimation} time: ${metadata.weight.time}")
+            Log.i(TAG, "Route points: ${points.size} sections: ${route.sections.size}")
+            //val length = route.distanceBetweenPolylinePositions(PolylinePosition(0, 0), )
+            //Log.i(TAG, "Route length: ")
+            /*
+            points.forEach {
+                Log.i(TAG, "Route point: $it")
+            }
+            */
+            /*
+            route.sections.forEach {
+                Log.i(TAG, "Section: ${it.metadata} ${it.geometry}")
+            }
+            */
+
+        }
+    }
+
+    override fun onMasstransitRoutesError(p0: Error) {
+        //
+        Log.e(TAG, p0.toString())
+    }
+
+}
+
 class Locator(val context: AppCompatActivity) : LocationListener {
     private val PERMISSIONS_REQUEST_FINE_LOCATION = 1
     private val DESIRED_ACCURACY = 5.0
@@ -56,6 +100,9 @@ class Locator(val context: AppCompatActivity) : LocationListener {
     private val USE_IN_BACKGROUND = false
     private val TAG = "LOC"
 
+    private val ROUTE_START_LOCATION = Point(59.9641, 30.3216) // test!!!
+    //private val ROUTE_END_LOCATION = Point(55.790621, 37.558571) // test!!!
+
     private val searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.COMBINED)
     private val locationManager = MapKitFactory.getInstance().createLocationManager()
     var location: Location? = null
@@ -63,7 +110,12 @@ class Locator(val context: AppCompatActivity) : LocationListener {
 
     init {
         requestLocationPermission()
+        TransportFactory.initialize(context)
     }
+    private val pedestrianRouter = TransportFactory.getInstance().createPedestrianRouter()
+
+    private val routeProxy = RouterProxy()
+
 
     /*
     val requestPermissionLauncher = registerForActivityResult(
@@ -136,5 +188,18 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         } else {
             return "Местоположение определяется, попробуйте повторить через несколько секунд"
         }
+    }
+
+    fun makeRoute(to : Point) : String {
+        if (location == null) {
+            return "Местоположение определяется, попробуйте повторить через несколько секунд"
+        }
+        val points: MutableList<RequestPoint> = ArrayList()
+        //points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
+        points.add(RequestPoint(ROUTE_START_LOCATION, RequestPointType.WAYPOINT, null))
+        //points.add(RequestPoint(ROUTE_END_LOCATION, RequestPointType.WAYPOINT, null))
+        points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
+        pedestrianRouter.requestRoutes(points, TimeOptions(), routeProxy)
+        return "строим маршрут"
     }
 }
