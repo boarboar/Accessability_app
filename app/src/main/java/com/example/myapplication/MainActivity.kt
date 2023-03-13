@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var vibrator: Vibro
     private lateinit var round_view: View
     private lateinit var square_view: View
-    private val geocodeApi = RetrofitHelper.getInstance().create(GeocoderApi::class.java)
+    private val geocodeApi = GeocoderHelper.getInstance().create(GeocoderApi::class.java)
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -143,6 +143,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         vibrator.createWaveFormVibrationUsingVibrationEffect()
     }
 
+    fun debugLocation(view: View) {
+        locator.debugMode = !locator.debugMode
+        Toast.makeText(applicationContext, "Locator debug is ${locator.debugMode}", Toast.LENGTH_SHORT).show()
+    }
+
     fun goHome(view: View) {
         //Toast.makeText(applicationContext, "Идем домой", Toast.LENGTH_SHORT).show()
         //speak("Строим маршрут для движения домой")
@@ -156,6 +161,12 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         //Toast.makeText(applicationContext, "Идем в аптеку", Toast.LENGTH_SHORT).show()
         //speak("Строим маршрут для движения в аптеку")
         val msg = locator.search("аптека", {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
+        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+        speak(msg)
+    }
+
+    fun goTransport(view: View) {
+        val msg = locator.search("остановка", {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
         Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
     }
@@ -193,41 +204,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val loc = locator.location
         if (loc != null) {
             val pos = loc.position
-            // launching a new coroutine
-            GlobalScope.launch {
-                var addressString : String? = null
-                var addressStringFull : String? = null
-                try {
-                    //val result = geocodeApi.getReverseGeocodeTest();
-                    val result = geocodeApi.getReverseGeocode(pos.longitude, pos.latitude)
-                    if (result != null && result.body() != null) {
-                        // Checking the results
-                        val address = result.body()!!.address
-                        var house = address.house_number
-                        if (house == null)
-                            house = address.building
-                        else
-                            house = house.replace(" к", " корпус ") //"12 к2" -> "12 корп 2"
-                        Log.d("GEO", result.body()!!.display_name)
-                        Log.d("GEO", address.toString())
-                        addressString = "${address.road} ${house}"
-                        addressStringFull = result.body()!!.display_name
-                    } else {
-                        Log.e("GEO", "Failed with $result")
-                    }
-                } catch (e: Throwable) {
-                    Log.e("GEO", e.toString())
-                }
-                // showing results in UI
-                withContext(Dispatchers.Main) {
-                    if (addressString != null) {
-                        Toast.makeText(this@MainActivity, addressStringFull, Toast.LENGTH_LONG).show()
-                        speak(addressString!!)
-                    } else {
-                        speak("Невозможно определить адрес")
-                    }
-                }
-            }
+            GeocoderHelper.requestAddress1(geocodeApi, pos.longitude, pos.latitude, {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
         } else
             speak("Местоположение определяется, попробуйте повторить через несколько секунд")
 

@@ -10,4 +10,5 @@
     <string name="btn_calldoctor_text_small"><font size="88">В</font>\n\<font size="8">(врач!)</font></string>
     <string name="btn_help_text_small"><font size="88">?</font></string>
     <string name="btn_no_func_text_compact"><font size="72">-</font></string>
+    <string name="btn_bus_stop"><font size="72">О</font></string>
 </resources>

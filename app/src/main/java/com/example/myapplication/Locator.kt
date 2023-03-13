@@ -33,6 +33,7 @@ class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -
             data?.let {
                 Log.w(TAG, it.name ?: "Address not available") // street
                 Log.w(TAG, it.descriptionText ?: "Address1 not available") // city
+                Log.w(TAG, "At: ${it.geometry[0].point?.latitude} ${it.geometry[0].point?.longitude}")
                 //Toast.makeText(context, it!!.name ?: "Address not available", Toast.LENGTH_SHORT).show()
                 if (it.name != null) {
                     onSuccess(it.name!!, it.descriptionText ?: "")
@@ -63,14 +64,13 @@ class RouterProxy() : Session.RouteListener {
     override fun onMasstransitRoutes(p0: MutableList<Route>) {
         if (p0.size > 0) {
             val route = p0[0]
-
             val points = route.geometry.points
             val metadata = route.metadata
-            Log.i(TAG, "Route from: ${metadata.wayPoints[0]} time: ${metadata.wayPoints[metadata.wayPoints.size-1]}")
-            Log.i(TAG, "Route time: ${metadata.estimation} time: ${metadata.weight.time}")
+            val from = metadata.wayPoints[0].position
+            val to = metadata.wayPoints[metadata.wayPoints.size-1].position
+            Log.i(TAG, "Route from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
+            Log.i(TAG, "Route est: ${metadata.weight.walkingDistance.value} m., time: ${metadata.weight.time.value/60} m.")
             Log.i(TAG, "Route points: ${points.size} sections: ${route.sections.size}")
-            //val length = route.distanceBetweenPolylinePositions(PolylinePosition(0, 0), )
-            //Log.i(TAG, "Route length: ")
             /*
             points.forEach {
                 Log.i(TAG, "Route point: $it")
@@ -81,7 +81,7 @@ class RouterProxy() : Session.RouteListener {
                 Log.i(TAG, "Section: ${it.metadata} ${it.geometry}")
             }
             */
-
+            //https://yandex.ru/dev/maps/mapkit/doc/android-ref/full/com/yandex/mapkit/directions/driving/DrivingRoute.html#getRoutePosition--
         }
     }
 
@@ -100,14 +100,19 @@ class Locator(val context: AppCompatActivity) : LocationListener {
     private val USE_IN_BACKGROUND = false
     private val TAG = "LOC"
 
-    private val ROUTE_START_LOCATION = Point(59.9641, 30.3216) // test!!!
+    private val DEFAULT_LOCATION = Point(59.9641, 30.3216) // test!!!
     //private val ROUTE_END_LOCATION = Point(55.790621, 37.558571) // test!!!
 
     private val searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.COMBINED)
     private val locationManager = MapKitFactory.getInstance().createLocationManager()
     var location: Location? = null
-    //    private set
-
+    var debugMode = false
+        set(value) {
+            field = value
+            if(value) {
+                location = Location(DEFAULT_LOCATION, 30.0, null,null,null,null,0,0)
+            }
+        }
     init {
         requestLocationPermission()
         TransportFactory.initialize(context)
@@ -130,6 +135,9 @@ class Locator(val context: AppCompatActivity) : LocationListener {
 */
 
     override fun onLocationUpdated(location: Location) {
+        if(debugMode) {
+            return
+        }
         val pos = location.position
         val msg = "" + pos.getLatitude() + "," + pos.getLongitude() + " (" +
                 location.accuracy?.toInt() + ")"
@@ -137,6 +145,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         this.location = location
     }
+
     override fun onLocationStatusUpdated(locationStatus: LocationStatus) {
         if (locationStatus == LocationStatus.NOT_AVAILABLE) { Log.w("MapKit", "Loc not avail")
             Toast.makeText(context, "Loc not avail", Toast.LENGTH_SHORT).show()
@@ -195,8 +204,8 @@ class Locator(val context: AppCompatActivity) : LocationListener {
             return "Местоположение определяется, попробуйте повторить через несколько секунд"
         }
         val points: MutableList<RequestPoint> = ArrayList()
-        //points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
-        points.add(RequestPoint(ROUTE_START_LOCATION, RequestPointType.WAYPOINT, null))
+        points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
+        //points.add(RequestPoint(ROUTE_START_LOCATION, RequestPointType.WAYPOINT, null))
         //points.add(RequestPoint(ROUTE_END_LOCATION, RequestPointType.WAYPOINT, null))
         points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
         pedestrianRouter.requestRoutes(points, TimeOptions(), routeProxy)
