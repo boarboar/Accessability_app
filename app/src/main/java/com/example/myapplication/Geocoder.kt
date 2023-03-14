@@ -29,6 +29,11 @@ interface GeocoderApi {
 }
 
 object GeocoderHelper {
+    val geocodeApi: GeocoderApi by lazy() {
+        Log.d("GEO", "GeocoderApi object created")
+        getInstance().create(GeocoderApi::class.java)
+    }
+
     val baseUrl = "https://nominatim.openstreetmap.org"
     fun getInstance(): Retrofit {
         return Retrofit.Builder().baseUrl(baseUrl)
@@ -38,7 +43,7 @@ object GeocoderHelper {
             .build()
     }
 
-    fun requestAddress1(geocodeApi : GeocoderApi, longitude : Double, latitude : Double, onSuccess : (address1: String, address2: String) -> Unit, onFailure : (error : String) -> Unit ) {
+    fun requestAddress1(longitude : Double, latitude : Double, onSuccess : (address1: String, address2: String) -> Unit, onFailure : (error : String) -> Unit ) {
         GlobalScope.launch {
             var addressString = ""
             var addressStringFull  = ""

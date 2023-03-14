@@ -12,7 +12,6 @@ import com.yandex.mapkit.RequestPoint
 import com.yandex.mapkit.RequestPointType
 import com.yandex.mapkit.geometry.Geometry
 import com.yandex.mapkit.geometry.Point
-import com.yandex.mapkit.geometry.PolylinePosition
 import com.yandex.mapkit.location.FilteringMode
 import com.yandex.mapkit.location.Location
 import com.yandex.mapkit.location.LocationListener
@@ -20,9 +19,8 @@ import com.yandex.mapkit.location.LocationStatus
 import com.yandex.mapkit.search.*
 import com.yandex.mapkit.search.Session.SearchListener
 import com.yandex.mapkit.transport.TransportFactory
-import com.yandex.mapkit.transport.masstransit.Route
+import com.yandex.mapkit.transport.masstransit.*
 import com.yandex.mapkit.transport.masstransit.Session
-import com.yandex.mapkit.transport.masstransit.TimeOptions
 import com.yandex.runtime.Error
 
 class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -> Unit, val onFailure : (error : String) -> Unit ) : SearchListener {
@@ -69,7 +67,7 @@ class RouterProxy() : Session.RouteListener {
             val from = metadata.wayPoints[0].position
             val to = metadata.wayPoints[metadata.wayPoints.size-1].position
             Log.i(TAG, "Route from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
-            Log.i(TAG, "Route est: ${metadata.weight.walkingDistance.value} m., time: ${metadata.weight.time.value/60} m.")
+            Log.i(TAG, "Walking est: ${metadata.weight.walkingDistance.value} m., time: ${metadata.weight.time.value/60} m.")
             Log.i(TAG, "Route points: ${points.size} sections: ${route.sections.size}")
             /*
             points.forEach {
@@ -118,6 +116,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         TransportFactory.initialize(context)
     }
     private val pedestrianRouter = TransportFactory.getInstance().createPedestrianRouter()
+    private val masstransitRouter = TransportFactory.getInstance().createMasstransitRouter()
 
     private val routeProxy = RouterProxy()
 
@@ -199,7 +198,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         }
     }
 
-    fun makeRoute(to : Point) : String {
+    fun makePedestrianRoute(to : Point) : String {
         if (location == null) {
             return "Местоположение определяется, попробуйте повторить через несколько секунд"
         }
@@ -209,6 +208,18 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         //points.add(RequestPoint(ROUTE_END_LOCATION, RequestPointType.WAYPOINT, null))
         points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
         pedestrianRouter.requestRoutes(points, TimeOptions(), routeProxy)
-        return "строим маршрут"
+        return "строим пеший маршрут"
+    }
+
+    fun makeTransportRoute(to : Point) : String {
+        if (location == null) {
+            return "Местоположение определяется, попробуйте повторить через несколько секунд"
+        }
+        val points: MutableList<RequestPoint> = ArrayList()
+        points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
+        points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
+        val options = TransitOptions(FilterVehicleTypes.NONE.value, TimeOptions())
+        masstransitRouter.requestRoutes(points, options, routeProxy)
+        return "строим транспортный маршрут"
     }
 }

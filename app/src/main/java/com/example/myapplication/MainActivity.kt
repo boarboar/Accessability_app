@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var vibrator: Vibro
     private lateinit var round_view: View
     private lateinit var square_view: View
-    private val geocodeApi = GeocoderHelper.getInstance().create(GeocoderApi::class.java)
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -151,7 +150,13 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     fun goHome(view: View) {
         //Toast.makeText(applicationContext, "Идем домой", Toast.LENGTH_SHORT).show()
         //speak("Строим маршрут для движения домой")
-        val msg = locator.makeRoute(Point(59.920199, 30.496880))
+        val msg = locator.makePedestrianRoute(Point(59.920199, 30.496880))
+        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
+        speak(msg)
+    }
+
+    fun goHomeByTransport(view: View) {
+        val msg = locator.makeTransportRoute(Point(59.920199, 30.496880))
         Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
     }
@@ -204,7 +209,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val loc = locator.location
         if (loc != null) {
             val pos = loc.position
-            GeocoderHelper.requestAddress1(geocodeApi, pos.longitude, pos.latitude, {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
+            GeocoderHelper.requestAddress1(pos.longitude, pos.latitude, {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
         } else
             speak("Местоположение определяется, попробуйте повторить через несколько секунд")
 
