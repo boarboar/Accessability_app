@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var round_view: View
     private lateinit var square_view: View
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
+    private val HOME_LOCATION = Point(59.920499, 30.497943)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -150,13 +151,13 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     fun goHome(view: View) {
         //Toast.makeText(applicationContext, "Идем домой", Toast.LENGTH_SHORT).show()
         //speak("Строим маршрут для движения домой")
-        val msg = locator.makePedestrianRoute(Point(59.920199, 30.496880))
+        val msg = locator.makePedestrianRoute(HOME_LOCATION,  {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
         Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
     }
 
     fun goHomeByTransport(view: View) {
-        val msg = locator.makeTransportRoute(Point(59.920199, 30.496880))
+        val msg = locator.makeTransportRoute(HOME_LOCATION, {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
         Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
     }
@@ -216,11 +217,21 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun onLocationResolve(address1: String, address2: String) {
-        Toast.makeText(this@MainActivity, address1 + ",   " + address2, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this@MainActivity, address1 + ",   " + address2, Toast.LENGTH_LONG).show()
         speak(address1 + ",   " + address2)
     }
 
     fun onLocationError(error: String) {
+        Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
+        speak(error)
+    }
+
+    fun onRouteResolve(a: String) {
+        Toast.makeText(this@MainActivity, a, Toast.LENGTH_LONG).show()
+        speak(a)
+    }
+
+    fun onRouteResolveError(error: String) {
         Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
         speak(error)
     }
