@@ -152,14 +152,14 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         //Toast.makeText(applicationContext, "Идем домой", Toast.LENGTH_SHORT).show()
         //speak("Строим маршрут для движения домой")
         val msg = locator.makePedestrianRoute(HOME_LOCATION,  {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
-        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
+        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
     }
 
     fun goHomeByTransport(view: View) {
         val msg = locator.makeTransportRoute(HOME_LOCATION, {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
-        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
+        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
     }
 
     fun goDrugstore(view: View) {
@@ -167,14 +167,14 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         //Toast.makeText(applicationContext, "Идем в аптеку", Toast.LENGTH_SHORT).show()
         //speak("Строим маршрут для движения в аптеку")
         val msg = locator.search("аптека", {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
-        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
+        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
     }
 
     fun goTransport(view: View) {
         val msg = locator.search("остановка", {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
-        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         speak(msg)
+        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
     }
 
     fun callDoctor(view: View) {
@@ -217,23 +217,23 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun onLocationResolve(address1: String, address2: String) {
-        Toast.makeText(this@MainActivity, address1 + ",   " + address2, Toast.LENGTH_LONG).show()
         speak(address1 + ",   " + address2)
+        Toast.makeText(this@MainActivity, address1 + ",   " + address2, Toast.LENGTH_LONG).show()
     }
 
     fun onLocationError(error: String) {
-        Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
         speak(error)
+        Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
     }
 
     fun onRouteResolve(a: String) {
-        Toast.makeText(this@MainActivity, a, Toast.LENGTH_LONG).show()
         speak(a)
+        Toast.makeText(this@MainActivity, a, Toast.LENGTH_LONG).show()
     }
 
     fun onRouteResolveError(error: String) {
-        Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
         speak(error)
+        Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
     }
 
     /*
