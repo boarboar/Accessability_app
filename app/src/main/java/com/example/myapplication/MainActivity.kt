@@ -154,6 +154,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     fun onTest(view: View) {
         viewModel.requestAddress(HOME_LOCATION.longitude, HOME_LOCATION.latitude).observe(this, {
             if(it.success) {
+                speak(it.short)
                 Toast.makeText(applicationContext, "Address: ${it.long}", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(applicationContext, "Error: ${it.error}", Toast.LENGTH_LONG).show()
@@ -223,14 +224,23 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val loc = locator.location
         if (loc != null) {
             val pos = loc.position
-            GeocoderHelper.requestAddress1(pos.longitude, pos.latitude, {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
+            //GeocoderHelper.requestAddress1(pos.longitude, pos.latitude, {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
+            viewModel.requestAddress(pos.longitude, pos.latitude).observe(this, {
+                if(it.success) {
+                    speak(it.short)
+                    Toast.makeText(applicationContext, "Address: ${it.long}", Toast.LENGTH_SHORT).show()
+                } else {
+                    speak("Ошибка при определении местоположения")
+                    Toast.makeText(applicationContext, "Error: ${it.error}", Toast.LENGTH_LONG).show()
+                }
+            })
         } else
             speak("Местоположение определяется, попробуйте повторить через несколько секунд")
 
     }
 
     fun onLocationResolve(address1: String, address2: String) {
-        speak(address1 /*+ ",   " + address2*/)
+        speak(address1)
         Toast.makeText(this@MainActivity, address1 + ",   " + address2, Toast.LENGTH_LONG).show()
     }
 

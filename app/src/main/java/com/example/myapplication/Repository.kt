@@ -18,10 +18,15 @@ class Repository {
                 // Checking the results
                 val address = result.body()!!.address
                 var house = address.house_number
-                if (house == null)
-                    house = address.building
-                else
+                if (house != null)
                     house = house.replace(" к", " корпус ") //"12 к2" -> "12 корп 2"
+                else {
+                    house = address.building
+                    if (house == null)
+                        house = address.amenity
+                    if (house == null)
+                        house = ""
+                }
                 Log.d("GEO", result.body()!!.display_name)
                 Log.d("GEO", address.toString())
                 return AddressResult("${address.road} ${house}", result.body()!!.display_name, true, "")
