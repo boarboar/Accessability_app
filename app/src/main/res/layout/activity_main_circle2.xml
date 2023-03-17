@@ -144,7 +144,7 @@
         android:layout_marginBottom="@dimen/default_margin"
         android:background="@drawable/roundbutton"
         android:contentDescription="Не сделано"
-        android:onClick="notImplemented"
+        android:onClick="onTest"
         android:text="@string/btn_no_func_text_compact"
         android:textColor="@color/gray"
         android:textSize="96sp"

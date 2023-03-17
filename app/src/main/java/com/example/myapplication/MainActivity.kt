@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.ViewModelProvider
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var square_view: View
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
     private val HOME_LOCATION = Point(59.920499, 30.497943)
+    lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +48,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         MapKitFactory.initialize(this)
         locator = Locator(this/*, this*/)
         vibrator = Vibro(this)
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java);
         requestCallPermission()
     }
 
@@ -148,6 +151,16 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         Toast.makeText(applicationContext, "Locator debug is ${locator.debugMode}", Toast.LENGTH_SHORT).show()
     }
 
+    fun onTest(view: View) {
+        viewModel.requestAddress(HOME_LOCATION.longitude, HOME_LOCATION.latitude).observe(this, {
+            if(it.success) {
+                Toast.makeText(applicationContext, "Address: ${it.long}", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(applicationContext, "Error: ${it.error}", Toast.LENGTH_LONG).show()
+            }
+        })
+    }
+
     fun goHome(view: View) {
         //Toast.makeText(applicationContext, "Идем домой", Toast.LENGTH_SHORT).show()
         //speak("Строим маршрут для движения домой")
@@ -217,7 +230,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun onLocationResolve(address1: String, address2: String) {
-        speak(address1 + ",   " + address2)
+        speak(address1 /*+ ",   " + address2*/)
         Toast.makeText(this@MainActivity, address1 + ",   " + address2, Toast.LENGTH_LONG).show()
     }
 
