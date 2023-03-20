@@ -46,6 +46,7 @@ class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -
                 }
             }
         } else {
+            Log.e(TAG, "Empty result")
             onFailure("Поиск не вернул результатов")
         }
     }
@@ -81,6 +82,9 @@ class RouterProxy(val onSuccess : (info: String) -> Unit, val onFailure : (error
             */
             //https://yandex.ru/dev/maps/mapkit/doc/android-ref/full/com/yandex/mapkit/directions/driving/DrivingRoute.html#getRoutePosition--
             onSuccess("Всего потребуется ${(metadata.weight.time.value/60).toInt()} минут, пешком потребуется пройти ${metadata.weight.walkingDistance.value} метров")
+        } else {
+            Log.e(TAG, "Empty route")
+            onFailure("Невозможно построить маршрут")
         }
     }
 
