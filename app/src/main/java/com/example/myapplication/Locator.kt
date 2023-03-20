@@ -80,7 +80,7 @@ class RouterProxy(val onSuccess : (info: String) -> Unit, val onFailure : (error
             }
             */
             //https://yandex.ru/dev/maps/mapkit/doc/android-ref/full/com/yandex/mapkit/directions/driving/DrivingRoute.html#getRoutePosition--
-            onSuccess("Всего потребуется ${metadata.weight.time.value/60} минут, пешком потребуется пройти ${metadata.weight.walkingDistance.value} метров")
+            onSuccess("Всего потребуется ${(metadata.weight.time.value/60).toInt()} минут, пешком потребуется пройти ${metadata.weight.walkingDistance.value} метров")
         }
     }
 
@@ -118,9 +118,6 @@ class Locator(val context: AppCompatActivity) : LocationListener {
     }
     private val pedestrianRouter = TransportFactory.getInstance().createPedestrianRouter()
     private val masstransitRouter = TransportFactory.getInstance().createMasstransitRouter()
-
-    //private val routeProxy = RouterProxy()
-
 
     /*
     val requestPermissionLauncher = registerForActivityResult(

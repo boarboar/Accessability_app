@@ -1,13 +1,5 @@
 package com.example.myapplication
 
-import android.util.Log
-import android.widget.Toast
-import com.yandex.mapkit.search.SearchOptions
-import com.yandex.mapkit.search.SearchType
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.Response

@@ -13,14 +13,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModelProvider
 import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
@@ -46,7 +41,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         tts = TextToSpeech(this, this)
 
         MapKitFactory.initialize(this)
-        locator = Locator(this/*, this*/)
+        locator = Locator(this)
         vibrator = Vibro(this)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java);
         requestCallPermission()
@@ -152,14 +147,14 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun onTest(view: View) {
-        viewModel.requestAddress(HOME_LOCATION.longitude, HOME_LOCATION.latitude).observe(this, {
-            if(it.success) {
+        viewModel.requestAddress(HOME_LOCATION.longitude, HOME_LOCATION.latitude).observe(this) {
+            if (it.success) {
                 speak(it.short)
                 Toast.makeText(applicationContext, "Address: ${it.long}", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(applicationContext, "Error: ${it.error}", Toast.LENGTH_LONG).show()
             }
-        })
+        }
     }
 
     fun goHome(view: View) {
@@ -225,15 +220,17 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         if (loc != null) {
             val pos = loc.position
             //GeocoderHelper.requestAddress1(pos.longitude, pos.latitude, {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
-            viewModel.requestAddress(pos.longitude, pos.latitude).observe(this, {
-                if(it.success) {
+            viewModel.requestAddress(pos.longitude, pos.latitude).observe(this) {
+                if (it.success) {
                     speak(it.short)
-                    Toast.makeText(applicationContext, "Address: ${it.long}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, "Address: ${it.long}", Toast.LENGTH_SHORT)
+                        .show()
                 } else {
                     speak("Ошибка при определении местоположения")
-                    Toast.makeText(applicationContext, "Error: ${it.error}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(applicationContext, "Error: ${it.error}", Toast.LENGTH_LONG)
+                        .show()
                 }
-            })
+            }
         } else
             speak("Местоположение определяется, попробуйте повторить через несколько секунд")
 
