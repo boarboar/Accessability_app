@@ -181,7 +181,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun goTransport(view: View) {
-        val msg = locator.search("остановка", {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
+        val msg = locator.search("остановка автобуса", {a1, a2 -> onLocationResolve(a1, a2, true) } , {error -> onLocationError(error)})
         speak(msg)
         Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
     }
@@ -236,9 +236,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     }
 
-    fun onLocationResolve(address1: String, address2: String) {
-        speak(address1)
-        Toast.makeText(this@MainActivity, address1 + ",   " + address2, Toast.LENGTH_LONG).show()
+    fun onLocationResolve(address1: String, address2: String, full: Boolean = false) {
+        if (full) speak(address1 + ", " + address2)
+        else speak(address1)
+        Toast.makeText(this@MainActivity, address1 + ", " + address2, Toast.LENGTH_LONG).show()
     }
 
     fun onLocationError(error: String) {
