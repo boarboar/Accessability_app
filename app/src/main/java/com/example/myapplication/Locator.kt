@@ -58,7 +58,7 @@ class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -
     }
 }
 
-class RouterProxy(val onSuccess : (info: String) -> Unit, val onFailure : (error : String) -> Unit ) : Session.RouteListener {
+class RouterProxy(val loc : Locator, val onSuccess : (info: String) -> Unit, val onFailure : (error : String) -> Unit ) : Session.RouteListener {
     private val TAG = "SRP"
     override fun onMasstransitRoutes(p0: MutableList<Route>) {
         if (p0.size > 0) {
@@ -70,6 +70,7 @@ class RouterProxy(val onSuccess : (info: String) -> Unit, val onFailure : (error
             Log.i(TAG, "Route from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
             Log.i(TAG, "Walking est: ${metadata.weight.walkingDistance.value} m., time: ${metadata.weight.time.value/60} m.")
             Log.i(TAG, "Route points: ${points.size} sections: ${route.sections.size}")
+
             /*
             points.forEach {
                 Log.i(TAG, "Route point: $it")
@@ -82,6 +83,7 @@ class RouterProxy(val onSuccess : (info: String) -> Unit, val onFailure : (error
             */
             //https://yandex.ru/dev/maps/mapkit/doc/android-ref/full/com/yandex/mapkit/directions/driving/DrivingRoute.html#getRoutePosition--
             onSuccess("Всего потребуется ${(metadata.weight.time.value/60).toInt()} минут, пешком потребуется пройти ${metadata.weight.walkingDistance.value} метров")
+            loc.currentRoute = route
         } else {
             Log.e(TAG, "Empty route")
             onFailure("Невозможно построить маршрут")
@@ -122,6 +124,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
     }
     private val pedestrianRouter = TransportFactory.getInstance().createPedestrianRouter()
     private val masstransitRouter = TransportFactory.getInstance().createMasstransitRouter()
+    var currentRoute : Route? = null
 
     /*
     val requestPermissionLauncher = registerForActivityResult(
@@ -206,10 +209,8 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         }
         val points: MutableList<RequestPoint> = ArrayList()
         points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
-        //points.add(RequestPoint(ROUTE_START_LOCATION, RequestPointType.WAYPOINT, null))
-        //points.add(RequestPoint(ROUTE_END_LOCATION, RequestPointType.WAYPOINT, null))
         points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
-        pedestrianRouter.requestRoutes(points, TimeOptions(), RouterProxy(onSuccess, onFailure))
+        pedestrianRouter.requestRoutes(points, TimeOptions(), RouterProxy(this, onSuccess, onFailure))
         return "строим пеший маршрут"
     }
 
@@ -221,7 +222,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
         points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
         val options = TransitOptions(FilterVehicleTypes.NONE.value, TimeOptions())
-        masstransitRouter.requestRoutes(points, options, RouterProxy(onSuccess, onFailure))
+        masstransitRouter.requestRoutes(points, options, RouterProxy(this, onSuccess, onFailure))
         return "строим транспортный маршрут"
     }
 }

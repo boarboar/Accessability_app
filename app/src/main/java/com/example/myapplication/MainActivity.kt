@@ -137,11 +137,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     fun notImplemented(view: View) {
         Toast.makeText(applicationContext, "Нет функции", Toast.LENGTH_SHORT).show()
-        //speak("Нет функции")
         vibrator.createWaveFormVibrationUsingVibrationEffect()
     }
 
     fun debugLocation(view: View) {
+        vibrator.createOneShotVibrationUsingVibrationEffect(1000); // test vibration
         locator.debugMode = !locator.debugMode
         Toast.makeText(applicationContext, "Locator debug is ${locator.debugMode}", Toast.LENGTH_SHORT).show()
     }
@@ -158,7 +158,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun goHome(view: View) {
-        //Toast.makeText(applicationContext, "Идем домой", Toast.LENGTH_SHORT).show()
         //speak("Строим маршрут для движения домой")
         val msg = locator.makePedestrianRoute(HOME_LOCATION,  {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
         speak(msg)
@@ -172,8 +171,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun goDrugstore(view: View) {
-        //vibrator.createOneShotVibrationUsingVibrationEffect(1000);
-        //Toast.makeText(applicationContext, "Идем в аптеку", Toast.LENGTH_SHORT).show()
         //speak("Строим маршрут для движения в аптеку")
         val msg = locator.search("аптека", {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
         speak(msg)
@@ -248,7 +245,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun onRouteResolve(a: String) {
-        speak(a)
+        speak(a + ". Хотите начать маршрут?")
         Toast.makeText(this@MainActivity, a, Toast.LENGTH_LONG).show()
     }
 
