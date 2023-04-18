@@ -41,8 +41,8 @@ class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -
             }
             p0.collection.children.forEach {
                 if (it.obj != null) {
-                    Log.w("MapKit", "Name:" + it.obj!!.name ?: "")
-                    Log.w("MapKit", "Desc:" + it.obj!!.descriptionText ?: "")
+                    Log.w("MapKit", "Name:" + it.obj?.name ?: "")
+                    Log.w("MapKit", "Desc:" + it.obj?.descriptionText ?: "")
                 }
             }
         } else {
@@ -62,28 +62,44 @@ class RouterProxy(val loc : Locator, val onSuccess : (info: String) -> Unit, val
     private val TAG = "SRP"
     override fun onMasstransitRoutes(p0: MutableList<Route>) {
         if (p0.size > 0) {
-            val route = p0[0]
-            val points = route.geometry.points
-            val metadata = route.metadata
-            val from = metadata.wayPoints[0].position
-            val to = metadata.wayPoints[metadata.wayPoints.size-1].position
-            Log.i(TAG, "Route from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
-            Log.i(TAG, "Walking est: ${metadata.weight.walkingDistance.value} m., time: ${metadata.weight.time.value/60} m.")
-            Log.i(TAG, "Route points: ${points.size} sections: ${route.sections.size}")
+            var bestRoute = p0[0]
+            p0.forEach { route ->
+                val points = route.geometry.points
+                val metadata = route.metadata
+                val from = metadata.wayPoints[0].position
+                val to = metadata.wayPoints[metadata.wayPoints.size-1].position
+                if (metadata.weight.walkingDistance.value < bestRoute.metadata.weight.walkingDistance.value) { // minimize walking
+                    bestRoute = route
+                }
+                Log.i(TAG, "Route from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
+                Log.i(TAG, "Walking est: ${metadata.weight.walkingDistance.value} m., time: ${metadata.weight.time.value/60} m.")
+                Log.i(TAG, "Route points: ${points.size} sections: ${route.sections.size}")
+                route.sections.forEach { r ->
+                    r.metadata.data.transports?.let { transports ->
+                        if (transports.size > 0) {
+                            val line = transports[0].line
+                            val vehicle =
+                                if (line.vehicleTypes.size > 0) line.vehicleTypes[0] else "?"
+                            Log.i(
+                                TAG,
+                                "Section: ${line.id}, ${line.name}, ${line.transportSystemId}, ${line.shortName}, $vehicle"
+                            )
+                            /*
+                        Section: 100000277, 2 линия, spb_metro, 2, underground
+                        Section: 100000287, 3 линия, spb_metro, 3, underground
+                        Section: 100000295, 4 линия, spb_metro, 4, underground
+                        Section: bcbb_12_bus_discus, 12, null, null, bus
+                        underground, bus, trolleybus, tramway
+                        */
+                        }
+                    }
+                }
+            }
 
-            /*
-            points.forEach {
-                Log.i(TAG, "Route point: $it")
-            }
-            */
-            /*
-            route.sections.forEach {
-                Log.i(TAG, "Section: ${it.metadata} ${it.geometry}")
-            }
-            */
             //https://yandex.ru/dev/maps/mapkit/doc/android-ref/full/com/yandex/mapkit/directions/driving/DrivingRoute.html#getRoutePosition--
-            onSuccess("Всего потребуется ${(metadata.weight.time.value/60).toInt()} минут, пешком потребуется пройти ${metadata.weight.walkingDistance.value} метров")
-            loc.currentRoute = route
+            val weight = bestRoute.metadata.weight
+            loc.currentRoute = bestRoute
+            onSuccess("Всего потребуется ${(weight.time.value/60).toInt()} минут, пешком потребуется пройти ${weight.walkingDistance.value} метров")
         } else {
             Log.e(TAG, "Empty route")
             onFailure("Невозможно построить маршрут")
