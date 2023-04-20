@@ -58,18 +58,22 @@ class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -
     }
 }
 
-class RouterProxy(val loc : Locator, val onSuccess : (info: String) -> Unit, val onFailure : (error : String) -> Unit ) : Session.RouteListener {
+class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : (info: String) -> Unit, val onFailure : (error : String) -> Unit ) : Session.RouteListener {
     private val TAG = "SRP"
     override fun onMasstransitRoutes(p0: MutableList<Route>) {
         if (p0.size > 0) {
             var bestRoute = p0[0]
+            val tlist = mutableListOf<String>()
             p0.forEach { route ->
                 val points = route.geometry.points
                 val metadata = route.metadata
                 val from = metadata.wayPoints[0].position
                 val to = metadata.wayPoints[metadata.wayPoints.size-1].position
+                var isBest = false
                 if (metadata.weight.walkingDistance.value < bestRoute.metadata.weight.walkingDistance.value) { // minimize walking
                     bestRoute = route
+                    isBest = true
+                    tlist.clear()
                 }
                 Log.i(TAG, "Route from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
                 Log.i(TAG, "Walking est: ${metadata.weight.walkingDistance.value} m., time: ${metadata.weight.time.value/60} m.")
@@ -84,6 +88,15 @@ class RouterProxy(val loc : Locator, val onSuccess : (info: String) -> Unit, val
                                 TAG,
                                 "Section: ${line.id}, ${line.name}, ${line.transportSystemId}, ${line.shortName}, $vehicle"
                             )
+                            tlist.add(when (vehicle) {
+                                "underground" -> "Метро, линия ${line.shortName}"
+                                "bus" -> "Автобус номер  ${line.name}"
+                                "bus" -> "Автобус номер ${line.name}"
+                                "trolleybus" -> "Троллейбус номер ${line.name}"
+                                "tramway" -> "Трамвай номер ${line.name}"
+                                else -> "$vehicle"
+                            })
+
                             /*
                         Section: 100000277, 2 линия, spb_metro, 2, underground
                         Section: 100000287, 3 линия, spb_metro, 3, underground
@@ -99,7 +112,10 @@ class RouterProxy(val loc : Locator, val onSuccess : (info: String) -> Unit, val
             //https://yandex.ru/dev/maps/mapkit/doc/android-ref/full/com/yandex/mapkit/directions/driving/DrivingRoute.html#getRoutePosition--
             val weight = bestRoute.metadata.weight
             loc.currentRoute = bestRoute
-            onSuccess("Всего потребуется ${(weight.time.value/60).toInt()} минут, пешком потребуется пройти ${weight.walkingDistance.value} метров")
+            if (isTransport)
+                onSuccess(tlist.joinToString(separator = ", ") + "; Всего потребуется ${(weight.time.value/60).toInt()} минут, пешком потребуется пройти ${weight.walkingDistance.value} метров")
+            else
+                onSuccess("Всего потребуется ${(weight.time.value/60).toInt()} минут, пешком потребуется пройти ${weight.walkingDistance.value} метров")
         } else {
             Log.e(TAG, "Empty route")
             onFailure("Невозможно построить маршрут")
@@ -226,7 +242,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         val points: MutableList<RequestPoint> = ArrayList()
         points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
         points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
-        pedestrianRouter.requestRoutes(points, TimeOptions(), RouterProxy(this, onSuccess, onFailure))
+        pedestrianRouter.requestRoutes(points, TimeOptions(), RouterProxy(this, false, onSuccess, onFailure))
         return "строим пеший маршрут"
     }
 
@@ -238,7 +254,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
         points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
         val options = TransitOptions(FilterVehicleTypes.NONE.value, TimeOptions())
-        masstransitRouter.requestRoutes(points, options, RouterProxy(this, onSuccess, onFailure))
+        masstransitRouter.requestRoutes(points, options, RouterProxy(this, true, onSuccess, onFailure))
         return "строим транспортный маршрут"
     }
 }
