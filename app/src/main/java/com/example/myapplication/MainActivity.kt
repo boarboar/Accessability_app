@@ -19,15 +19,18 @@ import com.yandex.mapkit.geometry.Point
 import java.util.*
 
 class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
+    private val PERMISSIONS_REQUEST_CALL_PHONE = 2
+    private val HOME_LOCATION = Point(59.920499, 30.497943)
+    private val VOL_UP_DELAY = 1000L
     private lateinit var tts: TextToSpeech
     private var ttsEnabled = false
     private  lateinit var locator: Locator
     private lateinit var vibrator: Vibro
     private lateinit var round_view: View
     private lateinit var square_view: View
-    private val PERMISSIONS_REQUEST_CALL_PHONE = 2
-    private val HOME_LOCATION = Point(59.920499, 30.497943)
-    lateinit var viewModel: MainViewModel
+    private var lastPressedUp : Long = 0; // in millis
+    private lateinit var viewModel: MainViewModel
+    private var ynDialog: YNDialogFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -184,21 +187,25 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun callDoctor(view: View) {
+        if (ynDialog != null) return
         val phone_number = "060"
         speak("Вы собираетесь набрать номер $phone_number; Нажмите кнопку ДА сверху чтобы подтвердтить")
 
-        val callDialog = YNDialogFragment()
-        callDialog.onYes = {
+        //val callDialog = YNDialogFragment()
+        ynDialog = YNDialogFragment()
+        ynDialog!!.onYes = {
             speak("звоню")
             //val phone_intent = Intent(Intent.ACTION_CALL)
             val phone_intent = Intent(Intent.ACTION_CALL)
             phone_intent.data = Uri.parse("tel:$phone_number")
             startActivity(phone_intent)
+            ynDialog = null
         }
-        callDialog.onNo = {
+        ynDialog!!.onNo = {
             speak("отбой")
+            ynDialog = null
         }
-        callDialog.show(supportFragmentManager)
+        ynDialog!!.show(supportFragmentManager)
     }
 
     fun whereAmI(view: View) {
@@ -254,17 +261,23 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
     }
 
-    /*
+    // Volume UP
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         super.onKeyUp(keyCode, event)
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            Toast.makeText(this@MainActivity, "Up working", Toast.LENGTH_SHORT).show()
-            speak("Действие по кнопке вверх")
+            if(System.currentTimeMillis() - lastPressedUp < VOL_UP_DELAY) {
+                Log.i("KEY", "VolUP")
+                callDoctor(this.round_view)
+                lastPressedUp = 0
+            } else {
+                // wait next press
+                lastPressedUp = System.currentTimeMillis()
+            }
             return true
         }
         return false
     }
-
+/*
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         super.onKeyDown(keyCode, event)
         if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
