@@ -1,7 +1,7 @@
 package com.example.myapplication
 
 import android.Manifest
-import android.content.Context
+//import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var vibrator: Vibro
     private lateinit var round_view: View
     private lateinit var square_view: View
-    private var lastPressedUp : Long = 0; // in millis
+    private var lastPressedUp : Long = 0 // in millis
     private lateinit var viewModel: MainViewModel
     private var ynDialog: YNDialogFragment? = null
 
@@ -46,14 +46,14 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         MapKitFactory.initialize(this)
         locator = Locator(this)
         vibrator = Vibro(this)
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java);
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         requestCallPermission()
     }
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             //val result = tts.setLanguage(Locale.US)
-            val result = tts.setLanguage(Locale("ru"));
+            val result = tts.setLanguage(Locale("ru"))
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Log.e("TTS", "The Language specified is not supported!")
             } else {
@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                 true
             }
             R.id.square_layout -> {
-                setContentView(square_view);
+                setContentView(square_view)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun debugLocation(view: View) {
-        vibrator.createOneShotVibrationUsingVibrationEffect(1000); // test vibration
+        vibrator.createOneShotVibrationUsingVibrationEffect(1000) // test vibration
         locator.debugMode = !locator.debugMode
         Toast.makeText(applicationContext, "Locator debug is ${locator.debugMode}", Toast.LENGTH_SHORT).show()
     }
@@ -189,7 +189,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     fun callDoctor(view: View) {
         if (ynDialog != null) return
         val phone_number = "060"
-        speak("Вы собираетесь набрать номер $phone_number; Нажмите кнопку ДА сверху чтобы подтвердтить")
+        speak("""
+            Вы собираетесь набрать номер $phone_number; 
+            Чтобы подтвердтить, нажмите кнопку ДА сверху или кнопку громкости вверх.
+            Чтобы отказаться, нажмите кнопку НЕТ снизу или кнопку громкости вниз.
+            """)
 
         //val callDialog = YNDialogFragment()
         ynDialog = YNDialogFragment()
@@ -266,27 +270,35 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         super.onKeyUp(keyCode, event)
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
             if(System.currentTimeMillis() - lastPressedUp < VOL_UP_DELAY) {
-                Log.i("KEY", "VolUP")
+                //Log.i("KEY", "VolUP")
                 callDoctor(this.round_view)
                 lastPressedUp = 0
             } else {
-                // wait next press
-                lastPressedUp = System.currentTimeMillis()
+                // handle YES action
+                if (ynDialog != null) {
+                    ynDialog!!.dismiss()
+                    ynDialog!!.onYes()
+                    lastPressedUp = 0
+                } else
+                    lastPressedUp = System.currentTimeMillis() // wait next press
             }
             return true
         }
         return false
     }
-/*
+    // Volume DN
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         super.onKeyDown(keyCode, event)
         if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            Toast.makeText(this@MainActivity, "Down working", Toast.LENGTH_SHORT).show()
-            speak("Действие по кнопке вниз")
+            // handle NO action
+            if (ynDialog != null) {
+                ynDialog!!.dismiss()
+                ynDialog!!.onNo()
+            }
             return true
         }
         return false
     }
-*/
+
 
 }
