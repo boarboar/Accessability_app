@@ -190,6 +190,19 @@ class Locator(val context: AppCompatActivity) : LocationListener {
 
     private fun requestLocationPermission() {
         if (ContextCompat.checkSelfPermission(context,
+                "android.permission.ACCESS_COARSE_LOCATION"
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            /*
+            requestPermissionLauncher.launch(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) */
+            ActivityCompat.requestPermissions(
+                context, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+                PERMISSIONS_REQUEST_FINE_LOCATION
+            )
+        }
+        if (ContextCompat.checkSelfPermission(context,
                 "android.permission.ACCESS_FINE_LOCATION"
             ) != PackageManager.PERMISSION_GRANTED
         ) {
