@@ -88,6 +88,15 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
                                 TAG,
                                 "Section: ${line.id}, ${line.name}, ${line.transportSystemId}, ${line.shortName}, $vehicle"
                             )
+                            /*
+                            Log sample:
+                            Section: 100000277, 2 линия, spb_metro, 2, underground
+                            Section: 100000287, 3 линия, spb_metro, 3, underground
+                            Section: 100000295, 4 линия, spb_metro, 4, underground
+                            Section: bcbb_12_bus_discus, 12, null, null, bus
+                            Vehicle types:
+                            underground, bus, trolleybus, tramway
+                            */
                             tlist.add(when (vehicle) {
                                 "underground" -> "Метро, линия ${line.shortName}"
                                 "bus" -> "Автобус номер  ${line.name}"
@@ -96,14 +105,6 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
                                 "tramway" -> "Трамвай номер ${line.name}"
                                 else -> "$vehicle"
                             })
-
-                            /*
-                        Section: 100000277, 2 линия, spb_metro, 2, underground
-                        Section: 100000287, 3 линия, spb_metro, 3, underground
-                        Section: 100000295, 4 линия, spb_metro, 4, underground
-                        Section: bcbb_12_bus_discus, 12, null, null, bus
-                        underground, bus, trolleybus, tramway
-                        */
                         }
                     }
                 }
@@ -131,7 +132,7 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
 }
 
 class Locator(val context: AppCompatActivity) : LocationListener {
-    private val PERMISSIONS_REQUEST_FINE_LOCATION = 1
+    private val PERMISSIONS_REQUEST_LOCATION = 1
     private val DESIRED_ACCURACY = 5.0
     private val MINIMAL_TIME: Long = 10000
     private val MINIMAL_DISTANCE = 1.0
@@ -158,18 +159,6 @@ class Locator(val context: AppCompatActivity) : LocationListener {
     private val masstransitRouter = TransportFactory.getInstance().createMasstransitRouter()
     var currentRoute : Route? = null
 
-    /*
-    val requestPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean ->
-            if (isGranted) {
-                Log.i("MapKit", "Location permission granted!")
-            } else {
-                Log.e("MapKit", "Location permission not granted!")
-            }
-        }
-*/
-
     override fun onLocationUpdated(location: Location) {
         if(debugMode) {
             return
@@ -193,26 +182,18 @@ class Locator(val context: AppCompatActivity) : LocationListener {
                 "android.permission.ACCESS_COARSE_LOCATION"
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            /*
-            requestPermissionLauncher.launch(
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) */
             ActivityCompat.requestPermissions(
                 context, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
-                PERMISSIONS_REQUEST_FINE_LOCATION
+                PERMISSIONS_REQUEST_LOCATION
             )
         }
         if (ContextCompat.checkSelfPermission(context,
                 "android.permission.ACCESS_FINE_LOCATION"
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            /*
-            requestPermissionLauncher.launch(
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) */
             ActivityCompat.requestPermissions(
                 context, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                PERMISSIONS_REQUEST_FINE_LOCATION
+                PERMISSIONS_REQUEST_LOCATION
             )
         }
     }
