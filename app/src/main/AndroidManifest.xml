@@ -14,11 +14,7 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
-    <!--
-    <uses-feature
-        android:name="android.hardware.telephony"
-        android:required="true" />
-    -->
+
     <!-- Include this permission any time your app needs location information. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Include only if your app benefits from precise location access. -->
@@ -44,7 +40,8 @@
             android:name=".NavActivity"
             android:exported="false"
             android:label="@string/title_activity_nav"
-            android:theme="@style/Theme.MyApplication" />
+            />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
