@@ -135,7 +135,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     fun onHelp(view: View) {
         Toast.makeText(applicationContext, "Помощь", Toast.LENGTH_SHORT).show()
-        speak("Рассказываем, как пользоваться приложением")
+        //speak("Рассказываем, как пользоваться приложением")
+
+        val intent = Intent(this, NavActivity::class.java)
+        startActivity(intent)
     }
 
     fun notImplemented(view: View) {
@@ -258,6 +261,19 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     fun onRouteResolve(a: String) {
         speak(a + ". Хотите начать маршрут?")
         Toast.makeText(this@MainActivity, a, Toast.LENGTH_LONG).show()
+        if (ynDialog != null) return
+        ynDialog = YNDialogFragment()
+        ynDialog!!.onYes = {
+            speak("Начинаем движение по маршруту")
+            ynDialog = null
+            val intent = Intent(this, NavActivity::class.java)
+            startActivity(intent)
+        }
+        ynDialog!!.onNo = {
+            speak("отбой")
+            ynDialog = null
+        }
+        ynDialog!!.show(supportFragmentManager)
     }
 
     fun onRouteResolveError(error: String) {
