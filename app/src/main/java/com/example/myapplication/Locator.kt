@@ -69,10 +69,10 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
                 val metadata = route.metadata
                 val from = metadata.wayPoints[0].position
                 val to = metadata.wayPoints[metadata.wayPoints.size-1].position
-                var isBest = false
+                //var isBest = false
                 if (metadata.weight.walkingDistance.value < bestRoute.metadata.weight.walkingDistance.value) { // minimize walking
                     bestRoute = route
-                    isBest = true
+                    //isBest = true
                     tlist.clear()
                 }
                 Log.i(TAG, "Route from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
@@ -100,7 +100,6 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
                             tlist.add(when (vehicle) {
                                 "underground" -> "Метро, линия ${line.shortName}"
                                 "bus" -> "Автобус номер  ${line.name}"
-                                "bus" -> "Автобус номер ${line.name}"
                                 "trolleybus" -> "Троллейбус номер ${line.name}"
                                 "tramway" -> "Трамвай номер ${line.name}"
                                 else -> "$vehicle"
@@ -178,21 +177,17 @@ class Locator(val context: AppCompatActivity) : LocationListener {
     }
 
     private fun requestLocationPermission() {
+        // not clear which perm to require
         if (ContextCompat.checkSelfPermission(context,
                 "android.permission.ACCESS_COARSE_LOCATION"
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                context, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
-                PERMISSIONS_REQUEST_LOCATION
-            )
-        }
-        if (ContextCompat.checkSelfPermission(context,
+            ) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context,
                 "android.permission.ACCESS_FINE_LOCATION"
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(
-                context, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            ActivityCompat.requestPermissions( context,
+                arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION),
                 PERMISSIONS_REQUEST_LOCATION
             )
         }
