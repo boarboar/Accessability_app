@@ -34,9 +34,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(R.layout.activity_main)
-        //setContentView(R.layout.activity_main_circle2)
-
         round_view = layoutInflater.inflate(R.layout.activity_main_circle2, null)
         square_view = layoutInflater.inflate(R.layout.activity_main, null)
         setContentView(round_view)
