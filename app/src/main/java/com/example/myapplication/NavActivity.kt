@@ -13,6 +13,7 @@ class NavActivity : AppCompatActivity() {
     private val icons = arrayOf(R.drawable.baseline_arrow_upward, R.drawable.baseline_arrow_right,
         R.drawable.baseline_arrow_downward, R.drawable.baseline_arrow_left, )
     private val testText = arrayOf("10", "100", "500", "1000")
+    private val announce = arrayOf("Вперед", "Направо", "Назад", "Налево")
     private lateinit var drawables: ArrayList<Drawable>
     private var dir = 0
 
@@ -27,6 +28,7 @@ class NavActivity : AppCompatActivity() {
         dir = (dir + 1) % 4
         findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
         findViewById<TextView>(R.id.textView).text = testText[dir]
+        TTS.speak(announce[dir])
     }
 }
 

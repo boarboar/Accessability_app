@@ -18,12 +18,10 @@ import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import java.util.*
 
-class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
+class MainActivity : AppCompatActivity() {
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
     private val HOME_LOCATION = Point(59.920499, 30.497943)
     private val VOL_UP_DELAY = 1000L
-    private lateinit var tts: TextToSpeech
-    private var ttsEnabled = false
     private  lateinit var locator: Locator
     private lateinit var vibrator: Vibro
     private lateinit var round_view: View
@@ -38,34 +36,13 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         square_view = layoutInflater.inflate(R.layout.activity_main, null)
         setContentView(round_view)
 
-        tts = TextToSpeech(this, this)
+        TTS.init(this)
 
         MapKitFactory.initialize(this)
         locator = Locator(this)
         vibrator = Vibro(this)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         requestCallPermission()
-    }
-
-    override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            //val result = tts.setLanguage(Locale.US)
-            val result = tts.setLanguage(Locale("ru"))
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.e("TTS", "The Language specified is not supported!")
-            } else {
-                ttsEnabled = true
-                Log.i("TTS", "Enabled")
-            }
-        } else {
-            Log.e("TTS", "Initilization Failed!")
-        }
-
-        if (!ttsEnabled) {
-            Toast.makeText(this@MainActivity, "Can not enable TTS!", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this@MainActivity, "TTS enabled", Toast.LENGTH_SHORT).show()
-        }
     }
 
     override fun onStart() {
@@ -83,11 +60,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     public override fun onDestroy() {
-        // Shutdown TTS
-        if (::tts.isInitialized) {
-            tts.stop()
-            tts.shutdown()
-        }
+        TTS.stop()
         super.onDestroy()
     }
 
@@ -113,9 +86,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun speak(text: String) {
-        if (ttsEnabled) {
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
-        }
+        TTS.speak(text)
     }
 
     private fun requestCallPermission() {
@@ -187,29 +158,17 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun callDoctor(view: View) {
-        if (ynDialog != null) return
         val phone_number = "060"
-        speak("""
+        actionYN("""
             Вы собираетесь набрать номер $phone_number; 
             Чтобы подтвердтить, нажмите кнопку ДА сверху или кнопку громкости вверх.
             Чтобы отказаться, нажмите кнопку НЕТ снизу или кнопку громкости вниз.
-            """)
-
-        //val callDialog = YNDialogFragment()
-        ynDialog = YNDialogFragment()
-        ynDialog!!.onYes = {
+            """) {
             speak("звоню")
-            //val phone_intent = Intent(Intent.ACTION_CALL)
             val phone_intent = Intent(Intent.ACTION_CALL)
             phone_intent.data = Uri.parse("tel:$phone_number")
             startActivity(phone_intent)
-            ynDialog = null
         }
-        ynDialog!!.onNo = {
-            speak("отбой")
-            ynDialog = null
-        }
-        ynDialog!!.show(supportFragmentManager)
     }
 
     fun whereAmI(view: View) {
@@ -256,21 +215,11 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     fun onRouteResolve(a: String) {
-        speak(a + ". Хотите начать маршрут?")
-        Toast.makeText(this@MainActivity, a, Toast.LENGTH_LONG).show()
-        if (ynDialog != null) return
-        ynDialog = YNDialogFragment()
-        ynDialog!!.onYes = {
+        actionYN(a + ". Хотите начать маршрут?") {
             speak("Начинаем движение по маршруту")
-            ynDialog = null
             val intent = Intent(this, NavActivity::class.java)
             startActivity(intent)
         }
-        ynDialog!!.onNo = {
-            speak("отбой")
-            ynDialog = null
-        }
-        ynDialog!!.show(supportFragmentManager)
     }
 
     fun onRouteResolveError(error: String) {
@@ -313,5 +262,19 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         return false
     }
 
-
+    fun actionYN(prompt: String, action : () -> Unit) {
+        if (ynDialog != null) return
+        speak(prompt)
+        Toast.makeText(this@MainActivity, prompt, Toast.LENGTH_LONG).show()
+        ynDialog = YNDialogFragment()
+        ynDialog!!.onYes = {
+            ynDialog = null
+            action()
+        }
+        ynDialog!!.onNo = {
+            speak("отбой")
+            ynDialog = null
+        }
+        ynDialog!!.show(supportFragmentManager)
+    }
 }
