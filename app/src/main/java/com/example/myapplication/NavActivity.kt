@@ -29,6 +29,7 @@ class NavActivity : AppCompatActivity() {
         findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
         findViewById<TextView>(R.id.textView).text = testText[dir]
         TTS.speak(announce[dir])
+        findViewById<TextView>(R.id.statusView).text = announce[dir]
     }
 }
 

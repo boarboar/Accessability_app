@@ -23,11 +23,23 @@
         android:layout_height="0dp"
         android:text="100"
         android:gravity="center"
-        android:textSize="96sp"
+        android:textSize="84sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView"
         tools:text="100" />
+
+    <TextView
+        android:id="@+id/statusView"
+        android:layout_width="233dp"
+        android:layout_height="0dp"
+        android:text="(no data)"
+        android:gravity="center"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        tools:text="(no data)" />
 
     <Button
         android:id="@+id/button"
@@ -38,7 +50,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/statusView" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
