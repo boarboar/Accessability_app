@@ -19,6 +19,7 @@ import com.yandex.mapkit.geometry.Point
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
+    private val TAG = "MAIN"
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
     private val HOME_LOCATION = Point(59.920499, 30.497943)
     private val VOL_UP_DELAY = 1000L
@@ -38,7 +39,6 @@ class MainActivity : AppCompatActivity() {
 
         TTS.init(this)
 
-        MapKitFactory.initialize(this)
         locator = Locator(this)
         vibrator = Vibro(this)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
@@ -47,16 +47,24 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        MapKitFactory.getInstance().onStart()
-        //mapView.onStart()
-        locator.subscribeToLocationUpdate()
+        Log.i( TAG, "onStart")
     }
 
     override fun onStop() {
         super.onStop()
+        Log.i( TAG, "onStop")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        locator.subscribeToLocationUpdate()
+        Log.i( TAG, "onResume")
+    }
+
+    override fun onPause() {
+        super.onPause()
         locator.unsubscribeFromLocationUpdate()
-        MapKitFactory.getInstance().onStop()
-        //mapView.onStop()
+        Log.i( TAG, "onPause")
     }
 
     public override fun onDestroy() {

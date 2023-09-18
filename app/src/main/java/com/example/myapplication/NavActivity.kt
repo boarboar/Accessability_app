@@ -2,14 +2,17 @@ package com.example.myapplication
 
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import com.yandex.mapkit.MapKitFactory
 
 
 class NavActivity : AppCompatActivity() {
+    private val TAG = "NAV"
     private val icons = arrayOf(R.drawable.baseline_arrow_upward, R.drawable.baseline_arrow_right,
         R.drawable.baseline_arrow_downward, R.drawable.baseline_arrow_left, )
     private val testText = arrayOf("10", "100", "500", "1000")
@@ -22,6 +25,27 @@ class NavActivity : AppCompatActivity() {
         setContentView(layoutInflater.inflate(R.layout.activity_nav, null))
         drawables = icons.map { AppCompatResources.getDrawable(applicationContext, it) } as ArrayList<Drawable>
     }
+
+    override fun onStart() {
+        super.onStart()
+        Log.i( TAG, "onStart")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.i( TAG, "onStop")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.i( TAG, "onResume")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.i( TAG, "onPause")
+    }
+
 
     fun onTurn(view: View) {
         //Toast.makeText(applicationContext, "Turn", Toast.LENGTH_SHORT).show()

@@ -131,6 +131,7 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
 }
 
 class Locator(val context: AppCompatActivity) : LocationListener {
+
     private val PERMISSIONS_REQUEST_LOCATION = 1
     private val DESIRED_ACCURACY = 5.0
     private val MINIMAL_TIME: Long = 10000
@@ -139,6 +140,10 @@ class Locator(val context: AppCompatActivity) : LocationListener {
     private val TAG = "LOC"
 
     private val DEFAULT_LOCATION = Point(59.972041, 30.323148) // test!!!
+
+    init {
+        MapKitFactory.initialize(context)
+    }
 
     private val searchManager = SearchFactory.getInstance().createSearchManager(SearchManagerType.COMBINED)
     private val locationManager = MapKitFactory.getInstance().createLocationManager()
@@ -194,6 +199,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
     }
 
     fun subscribeToLocationUpdate() {
+        MapKitFactory.getInstance().onStart()
         locationManager.subscribeForLocationUpdates(
             DESIRED_ACCURACY, MINIMAL_TIME, MINIMAL_DISTANCE,
             USE_IN_BACKGROUND, FilteringMode.OFF,
@@ -204,6 +210,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
 
     fun unsubscribeFromLocationUpdate() {
         locationManager.unsubscribe(this)
+        MapKitFactory.getInstance().onStop()
     }
 
     fun requestAddress1(onSuccess : (address1: String, address2: String) -> Unit, onFailure : (error : String) -> Unit ) : String {
