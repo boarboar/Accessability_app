@@ -161,23 +161,24 @@ class Locator(val context: AppCompatActivity) : LocationListener {
     }
     private val pedestrianRouter = TransportFactory.getInstance().createPedestrianRouter()
     private val masstransitRouter = TransportFactory.getInstance().createMasstransitRouter()
+    private var onLocationUpdate : ((location: Location?) -> Unit)? = null
     var currentRoute : Route? = null
+
 
     override fun onLocationUpdated(location: Location) {
         if(debugMode) {
             return
         }
         val pos = location.position
-        val msg = "" + pos.getLatitude() + "," + pos.getLongitude() + " (" +
-                location.accuracy?.toInt() + ")"
-        Log.w(TAG, msg)
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        Log.w(TAG, "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )")
         this.location = location
+        onLocationUpdate?.let {it(location)}
     }
 
     override fun onLocationStatusUpdated(locationStatus: LocationStatus) {
         if (locationStatus == LocationStatus.NOT_AVAILABLE) { Log.w("MapKit", "Loc not avail")
-            Toast.makeText(context, "Loc not avail", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(context, "Loc not avail", Toast.LENGTH_SHORT).show()
+            onLocationUpdate?.let {it(null)}
         }
     }
 
@@ -198,19 +199,22 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         }
     }
 
-    fun subscribeToLocationUpdate() {
+    fun subscribeToLocationUpdate(listener: ((location: Location?) -> Unit)?) {
         MapKitFactory.getInstance().onStart()
         locationManager.subscribeForLocationUpdates(
             DESIRED_ACCURACY, MINIMAL_TIME, MINIMAL_DISTANCE,
             USE_IN_BACKGROUND, FilteringMode.OFF,
             this
         )
+        onLocationUpdate = listener
         Log.i(TAG, "Subscribed to location update")
     }
 
     fun unsubscribeFromLocationUpdate() {
         locationManager.unsubscribe(this)
         MapKitFactory.getInstance().onStop()
+        onLocationUpdate = null
+        Log.i(TAG, "Unubscribed to location update")
     }
 
     fun requestAddress1(onSuccess : (address1: String, address2: String) -> Unit, onFailure : (error : String) -> Unit ) : String {

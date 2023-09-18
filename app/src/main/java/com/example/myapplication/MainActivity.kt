@@ -1,12 +1,10 @@
 package com.example.myapplication
 
 import android.Manifest
-//import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.*
-import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.*
 import android.widget.Toast
@@ -14,9 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
-import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
-import java.util.*
+import com.yandex.mapkit.location.Location
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MAIN"
@@ -57,7 +54,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        locator.subscribeToLocationUpdate()
+        locator.subscribeToLocationUpdate(this::OnLocationUpdate)
         Log.i( TAG, "onResume")
     }
 
@@ -106,6 +103,17 @@ class MainActivity : AppCompatActivity() {
                 this, arrayOf(Manifest.permission.CALL_PHONE),
                 PERMISSIONS_REQUEST_CALL_PHONE
             )
+        }
+    }
+
+    private fun OnLocationUpdate(location: Location?) {
+        if (location == null) {
+            Toast.makeText(this, "Loc not avail", Toast.LENGTH_SHORT).show()
+        } else {
+            val pos = location.position
+            Toast.makeText(this,
+                "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )",
+                Toast.LENGTH_SHORT).show()
         }
     }
 
