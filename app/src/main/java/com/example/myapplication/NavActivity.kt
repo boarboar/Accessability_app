@@ -6,9 +6,11 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import com.yandex.mapkit.MapKitFactory
+import com.yandex.mapkit.location.Location
 
 
 class NavActivity : AppCompatActivity() {
@@ -19,11 +21,13 @@ class NavActivity : AppCompatActivity() {
     private val announce = arrayOf("Вперед", "Направо", "Назад", "Налево")
     private lateinit var drawables: ArrayList<Drawable>
     private var dir = 0
+    private  lateinit var locator: Locator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(layoutInflater.inflate(R.layout.activity_nav, null))
         drawables = icons.map { AppCompatResources.getDrawable(applicationContext, it) } as ArrayList<Drawable>
+        locator = Locator.getInstance(this)
     }
 
     override fun onStart() {
@@ -38,14 +42,24 @@ class NavActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        locator.subscribeToLocationUpdate(this::onLocationUpdate)
         Log.i( TAG, "onResume")
     }
 
     override fun onPause() {
         super.onPause()
+        locator.unsubscribeFromLocationUpdate()
         Log.i( TAG, "onPause")
     }
 
+    private fun onLocationUpdate(location: Location?) {
+        var msg = "Loc not avail"
+        if (location != null) {
+            val pos = location.position
+            msg= "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )"
+        }
+        findViewById<TextView>(R.id.statusView).text = msg
+    }
 
     fun onTurn(view: View) {
         //Toast.makeText(applicationContext, "Turn", Toast.LENGTH_SHORT).show()

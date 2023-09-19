@@ -3,7 +3,6 @@ package com.example.myapplication
 import android.Manifest
 import android.content.pm.PackageManager
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -41,8 +40,8 @@ class SearchListenerProxy(val onSuccess : (address1: String, address2: String) -
             }
             p0.collection.children.forEach {
                 if (it.obj != null) {
-                    Log.w("MapKit", "Name:" + it.obj?.name ?: "")
-                    Log.w("MapKit", "Desc:" + it.obj?.descriptionText ?: "")
+                    Log.w("MapKit", ("Name:" + it.obj?.name))
+                    Log.w("MapKit", ("Desc:" + it.obj?.descriptionText))
                 }
             }
         } else {
@@ -69,13 +68,13 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
                 val metadata = route.metadata
                 val from = metadata.wayPoints[0].position
                 val to = metadata.wayPoints[metadata.wayPoints.size-1].position
-                //var isBest = false
+                var isBest = false
                 if (metadata.weight.walkingDistance.value < bestRoute.metadata.weight.walkingDistance.value) { // minimize walking
                     bestRoute = route
-                    //isBest = true
+                    isBest = true
                     tlist.clear()
                 }
-                Log.i(TAG, "Route from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
+                Log.i(TAG, "=== Route from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
                 Log.i(TAG, "Walking est: ${metadata.weight.walkingDistance.value} m., time: ${metadata.weight.time.value/60} m.")
                 Log.i(TAG, "Route points: ${points.size} sections: ${route.sections.size}")
                 route.sections.forEach { r ->
@@ -97,12 +96,12 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
                             Vehicle types:
                             underground, bus, trolleybus, tramway
                             */
-                            tlist.add(when (vehicle) {
+                            if (isBest)  tlist.add(when (vehicle) {
                                 "underground" -> "Метро, линия ${line.shortName}"
                                 "bus" -> "Автобус номер  ${line.name}"
                                 "trolleybus" -> "Троллейбус номер ${line.name}"
                                 "tramway" -> "Трамвай номер ${line.name}"
-                                else -> "$vehicle"
+                                else -> vehicle
                             })
                         }
                     }
@@ -112,9 +111,13 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
             //https://yandex.ru/dev/maps/mapkit/doc/android-ref/full/com/yandex/mapkit/directions/driving/DrivingRoute.html#getRoutePosition--
             val weight = bestRoute.metadata.weight
             loc.currentRoute = bestRoute
-            if (isTransport)
+            if (isTransport) {
+                Log.i(
+                    TAG,
+                    "Best: ${tlist.joinToString(separator = ", ")}"
+                )
                 onSuccess(tlist.joinToString(separator = ", ") + "; Всего потребуется ${(weight.time.value/60).toInt()} минут, пешком потребуется пройти ${weight.walkingDistance.value} метров")
-            else
+            }  else
                 onSuccess("Всего потребуется ${(weight.time.value/60).toInt()} минут, пешком потребуется пройти ${weight.walkingDistance.value} метров")
         } else {
             Log.e(TAG, "Empty route")
@@ -130,7 +133,22 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
 
 }
 
-class Locator(val context: AppCompatActivity) : LocationListener {
+class Locator private constructor(private val context: AppCompatActivity) : LocationListener {
+    companion object {
+        @Volatile
+        private var instance: Locator? = null
+        /*
+        fun init(context: AppCompatActivity) {
+            instance = Locator(context)
+        }
+        */
+        fun getInstance(context: AppCompatActivity): Locator {
+            if (instance == null) {
+                instance = Locator(context)
+            }
+            return instance!!
+        }
+    }
 
     private val PERMISSIONS_REQUEST_LOCATION = 1
     private val DESIRED_ACCURACY = 5.0
@@ -217,6 +235,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
         Log.i(TAG, "Unubscribed to location update")
     }
 
+    /*
     fun requestAddress1(onSuccess : (address1: String, address2: String) -> Unit, onFailure : (error : String) -> Unit ) : String {
         if (location != null) {
             searchManager.submit(location!!.position, 18, SearchOptions().apply { searchTypes = SearchType.GEO.value }, SearchListenerProxy(onSuccess, onFailure) )
@@ -225,6 +244,7 @@ class Locator(val context: AppCompatActivity) : LocationListener {
             return "Местоположение определяется, попробуйте повторить через несколько секунд"
         }
     }
+    */
 
     fun search(query: String, onSuccess : (address1: String, address2: String) -> Unit, onFailure : (error : String) -> Unit ) : String {
         if (location != null) {

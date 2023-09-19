@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
 
         TTS.init(this)
 
-        locator = Locator(this)
+        locator = Locator.getInstance(this)
         vibrator = Vibro(this)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         requestCallPermission()
@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        locator.subscribeToLocationUpdate(this::OnLocationUpdate)
+        locator.subscribeToLocationUpdate(this::onLocationUpdate)
         Log.i( TAG, "onResume")
     }
 
@@ -106,15 +106,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun OnLocationUpdate(location: Location?) {
-        if (location == null) {
-            Toast.makeText(this, "Loc not avail", Toast.LENGTH_SHORT).show()
-        } else {
+    private fun onLocationUpdate(location: Location?) {
+        var msg = "Loc not avail"
+        if (location != null) {
             val pos = location.position
-            Toast.makeText(this,
-                "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )",
-                Toast.LENGTH_SHORT).show()
+            msg= "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )"
         }
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 
     fun onHelp(view: View) {
@@ -219,18 +217,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun onLocationResolve(address1: String, address2: String, full: Boolean = false) {
+    private fun onLocationResolve(address1: String, address2: String, full: Boolean = false) {
         if (full) speak(address1 + ", " + address2)
         else speak(address1)
         Toast.makeText(this@MainActivity, address1 + ", " + address2, Toast.LENGTH_LONG).show()
     }
 
-    fun onLocationError(error: String) {
+    private fun onLocationError(error: String) {
         speak(error)
         Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
     }
 
-    fun onRouteResolve(a: String) {
+    private fun onRouteResolve(a: String) {
         actionYN(a + ". Хотите начать маршрут?") {
             speak("Начинаем движение по маршруту")
             val intent = Intent(this, NavActivity::class.java)
@@ -238,7 +236,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun onRouteResolveError(error: String) {
+    private fun onRouteResolveError(error: String) {
         speak(error)
         Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
     }
@@ -278,7 +276,7 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    fun actionYN(prompt: String, action : () -> Unit) {
+    private fun actionYN(prompt: String, action : () -> Unit) {
         if (ynDialog != null) return
         speak(prompt)
         Toast.makeText(this@MainActivity, prompt, Toast.LENGTH_LONG).show()
