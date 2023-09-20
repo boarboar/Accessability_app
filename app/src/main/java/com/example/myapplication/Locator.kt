@@ -1,6 +1,8 @@
 package com.example.myapplication
 
 import android.Manifest
+import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -111,6 +113,7 @@ class RouterProxy(val loc : Locator, val isTransport : Boolean, val onSuccess : 
             //https://yandex.ru/dev/maps/mapkit/doc/android-ref/full/com/yandex/mapkit/directions/driving/DrivingRoute.html#getRoutePosition--
             val weight = bestRoute.metadata.weight
             loc.currentRoute = bestRoute
+            loc.saveTransportRoute(bestRoute, isTransport)
             if (isTransport) {
                 Log.i(
                     TAG,
@@ -155,6 +158,8 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
     private val MINIMAL_TIME: Long = 10000
     private val MINIMAL_DISTANCE = 1.0
     private val USE_IN_BACKGROUND = false
+    private val TRANSPORT_ROUTE_FILE = "SavedTransportRoute"
+    private val PEDESTRIAN_ROUTE_FILE = "SavedPedestrianRoute"
     private val TAG = "LOC"
 
     private val DEFAULT_LOCATION = Point(59.972041, 30.323148) // test!!!
@@ -276,5 +281,48 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
         val options = TransitOptions(FilterVehicleTypes.NONE.value, TimeOptions())
         masstransitRouter.requestRoutes(points, options, RouterProxy(this, true, onSuccess, onFailure))
         return "строим транспортный маршрут"
+    }
+
+    fun saveTransportRoute(route: Route, isTransport: Boolean) {
+        try {
+            val filename = if (isTransport) TRANSPORT_ROUTE_FILE else PEDESTRIAN_ROUTE_FILE
+            val bytes = if (isTransport) masstransitRouter.routeSerializer().save(route)
+                    else pedestrianRouter.routeSerializer().save(route)
+            context.openFileOutput(filename,
+                Context.MODE_PRIVATE).use {
+                it.write(bytes)
+                Log.i(TAG, "Route saved")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, e.toString())
+        }
+    }
+
+    fun loadRoute(isTransport: Boolean) : Route? {
+        try {
+            val filename = if (isTransport) TRANSPORT_ROUTE_FILE else PEDESTRIAN_ROUTE_FILE
+            context.openFileInput(filename).use {
+                val bytes = it.readBytes()
+                if (bytes.isEmpty()) {
+                    Log.w(TAG, "Saved route - empty array read")
+                    return null
+                }
+                val route = if (isTransport)  masstransitRouter.routeSerializer().load(bytes)
+                        else pedestrianRouter.routeSerializer().load(bytes)
+                if (route == null) {
+                    Log.w(TAG, "Saved route - failed to deserialize")
+                    return null
+                }
+                val metadata = route.metadata
+                val from = metadata.wayPoints[0].position
+                val to = metadata.wayPoints[metadata.wayPoints.size-1].position
+                Log.i(TAG, "=== Route loaded from: ${from.latitude} ${from.longitude} to: ${to.latitude} ${to.longitude}")
+
+                return route
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, e.toString())
+        }
+        return null
     }
 }

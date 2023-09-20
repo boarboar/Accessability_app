@@ -43,6 +43,7 @@ class NavActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         locator.subscribeToLocationUpdate(this::onLocationUpdate)
+        locator.loadRoute(false)
         Log.i( TAG, "onResume")
     }
 
