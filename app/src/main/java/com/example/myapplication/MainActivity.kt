@@ -116,9 +116,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onHelp(view: View) {
-        Toast.makeText(applicationContext, "Помощь", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(applicationContext, "Помощь", Toast.LENGTH_SHORT).show()
         //speak("Рассказываем, как пользоваться приложением")
-
+        // Test - run NAV
         val intent = Intent(this, NavActivity::class.java)
         startActivity(intent)
     }

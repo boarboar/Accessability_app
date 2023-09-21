@@ -6,11 +6,11 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
-import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.location.Location
+import com.yandex.mapkit.transport.masstransit.Route
+import java.util.Locale
 
 
 class NavActivity : AppCompatActivity() {
@@ -22,6 +22,8 @@ class NavActivity : AppCompatActivity() {
     private lateinit var drawables: ArrayList<Drawable>
     private var dir = 0
     private  lateinit var locator: Locator
+    private var route : Route? = null
+    // add status: waitloc, onroute...
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +45,13 @@ class NavActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         locator.subscribeToLocationUpdate(this::onLocationUpdate)
-        locator.loadRoute(false)
+        route = locator.loadRoute(false)
+        route?.let {
+            val npoints = it.geometry.points.size // route points (we should use these for nav)
+            val nwpoints = it.metadata.wayPoints.size // user-defined start, end, intermediate
+            val nsects = it.sections.size
+            findViewById<TextView>(R.id.routeView).text = "Route loaded $npoints, $nwpoints, $nsects"
+        }
         Log.i( TAG, "onResume")
     }
 
@@ -57,7 +65,16 @@ class NavActivity : AppCompatActivity() {
         var msg = "Loc not avail"
         if (location != null) {
             val pos = location.position
-            msg= "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )"
+            var speedStr = "0"
+            if (location.speed != null) {
+                //speedStr = String.format("%.1f", location.speed)
+                speedStr = "%,.1f".format(Locale.ENGLISH, location.speed)
+            }
+            msg= "${pos.latitude},${pos.longitude} (${location.accuracy?.toInt()}) ${location.heading?.toInt()}, $speedStr"
+
+            // if status waitloc -> to onroute, find nearest points, target to next
+            // if close to next, switch to next.next
+            // adjust bearing to next
         }
         findViewById<TextView>(R.id.statusView).text = msg
     }

@@ -193,7 +193,7 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
             return
         }
         val pos = location.position
-        Log.w(TAG, "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )")
+        Log.w(TAG, "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} ), ${location.heading}, ${location.speed}")
         this.location = location
         onLocationUpdate?.let {it(location)}
     }
