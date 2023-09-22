@@ -13,6 +13,9 @@
                 android:title="Круглый" />
             <item android:id="@+id/square_layout"
                 android:title="Квадратный" />
+            <item android:id="@+id/mute"
+                android:checkable="true"
+                android:title="Без звука" />
         </menu>
 
     </item>

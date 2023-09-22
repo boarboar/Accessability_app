@@ -11,6 +11,7 @@ class TTS private constructor(context: Context) : TextToSpeech.OnInitListener {
     private val TAG = "TTS"
     private var tts = TextToSpeech(context, this)
     private var ttsEnabled = false
+    private var muted = false
     companion object {
         @Volatile
         private var instance: TTS? = null
@@ -25,6 +26,11 @@ class TTS private constructor(context: Context) : TextToSpeech.OnInitListener {
         }
         fun speak(text: String) {
             instance?.speak(text)
+        }
+        fun mute(mute : Boolean) {
+            instance?.let {
+                it.muted = mute
+            }
         }
     }
 
@@ -57,7 +63,7 @@ class TTS private constructor(context: Context) : TextToSpeech.OnInitListener {
     }
 
     fun speak(text: String) {
-        if (ttsEnabled) {
+        if (ttsEnabled && !muted) {
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
         }
     }

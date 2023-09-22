@@ -86,6 +86,11 @@ class MainActivity : AppCompatActivity() {
                 setContentView(square_view)
                 true
             }
+            R.id.mute -> {
+                item.isChecked = !item.isChecked
+                TTS.mute(item.isChecked)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
