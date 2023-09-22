@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import com.yandex.mapkit.geometry.Geo
 import com.yandex.mapkit.location.Location
 import com.yandex.mapkit.transport.masstransit.Route
 import java.util.Locale
@@ -51,6 +52,16 @@ class NavActivity : AppCompatActivity() {
             val nwpoints = it.metadata.wayPoints.size // user-defined start, end, intermediate
             val nsects = it.sections.size
             findViewById<TextView>(R.id.routeView).text = "Route loaded $npoints, $nwpoints, $nsects"
+            // log 10 first points
+            // it seems at least first two points are coincide
+            Log.i( TAG, "Route loaded $npoints, $nwpoints, $nsects")
+            if (it.geometry.points.size > 1) {
+                var p0 = it.geometry.points[0]
+                it.geometry.points.take(10).forEachIndexed() { i, p ->
+                    Log.i( TAG, "$i ${(Geo::distance)(p, p0).toInt()} ${(Geo::course)(p, p0).toInt()}")
+                    p0 = p
+                }
+            }
         }
         Log.i( TAG, "onResume")
     }
@@ -75,6 +86,19 @@ class NavActivity : AppCompatActivity() {
             // if status waitloc -> to onroute, find nearest points, target to next
             // if close to next, switch to next.next
             // adjust bearing to next
+            // use Geo class  - methods distance, course
+            //
+            route?.let {
+                if (it.geometry.points.size > 1) {
+                    val p0 = it.geometry.points[0]
+                    val p1 = it.geometry.points[1]
+                    val d0 = (Geo::distance)(pos, p0).toInt()
+                    val d1 = (Geo::distance)(pos, p1).toInt()
+                    val a0 = (Geo::course)(pos, p0).toInt()
+                    val a1 = (Geo::course)(pos, p1).toInt()
+                    findViewById<TextView>(R.id.routeView).text = "$d0 ($a0); $d1($a1)"
+                }
+            }
         }
         findViewById<TextView>(R.id.statusView).text = msg
     }
