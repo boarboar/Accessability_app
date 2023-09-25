@@ -101,17 +101,16 @@ class NavActivity : AppCompatActivity() {
                         closestPoint = i
                     }
                 }
+                val p = it.geometry.points[closestPoint]
+                var text = ""
 
                 when (status) {
                     Status.Wait -> {
                         if (closestDist < D) { //On route
-                            findViewById<TextView>(R.id.routeView).text =
-                                "$closestPoint; ${closestDist.toInt()} - ON ROUTE"
+                            text = "$closestPoint; ${closestDist.toInt()} - ON ROUTE"
                             status = Status.OnRoute
                         } else {
-                            val p = it.geometry.points[closestPoint]
-                            findViewById<TextView>(R.id.routeView).text =
-                                "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - OFF ROUTE"
+                            text = "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - OFF ROUTE"
                                     // course: angle from NORTH to Vec(pos->p0)
                         }
                     }
@@ -123,10 +122,10 @@ class NavActivity : AppCompatActivity() {
                                 return
                             }
                             // follow...
+                            text = "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - FOLLOW"
+                            // follow
                         } else {
-                            val p = it.geometry.points[closestPoint]
-                            findViewById<TextView>(R.id.routeView).text =
-                                "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - LOST ROUTE"
+                            text = "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - LOST ROUTE"
                             // lost route...
                             status = Status.Wait
                         }
@@ -135,6 +134,8 @@ class NavActivity : AppCompatActivity() {
 
                     }
                 }
+                findViewById<TextView>(R.id.routeView).text = text
+                findViewById<TextView>(R.id.textView).text = closestDist.toString()
             }
         }
 
