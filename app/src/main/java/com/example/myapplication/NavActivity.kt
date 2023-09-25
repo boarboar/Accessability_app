@@ -15,6 +15,7 @@ import java.util.Locale
 
 
 class NavActivity : AppCompatActivity() {
+    enum class Status { NoRoute, Wait, OnRoute, Finished }
     private val TAG = "NAV"
     private val icons = arrayOf(R.drawable.baseline_arrow_upward, R.drawable.baseline_arrow_right,
         R.drawable.baseline_arrow_downward, R.drawable.baseline_arrow_left, )
@@ -24,7 +25,9 @@ class NavActivity : AppCompatActivity() {
     private var dir = 0
     private  lateinit var locator: Locator
     private var route : Route? = null
-    // add status: waitloc, onroute...
+    private var status = Status.Wait
+    private val D = 10f  // Close to route
+    private val D_TARG = 5f  // Arrival
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +48,7 @@ class NavActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        status = Status.NoRoute
         locator.subscribeToLocationUpdate(this::onLocationUpdate)
         route = locator.loadRoute(false)
         route?.let {
@@ -56,6 +60,7 @@ class NavActivity : AppCompatActivity() {
             // it seems at least first two points are coincide
             Log.i( TAG, "Route loaded $npoints, $nwpoints, $nsects")
             if (it.geometry.points.size > 1) {
+                status = Status.Wait
                 var p0 = it.geometry.points[0]
                 it.geometry.points.take(10).forEachIndexed() { i, p ->
                     Log.i( TAG, "$i ${(Geo::distance)(p, p0).toInt()} ${(Geo::course)(p, p0).toInt()}")
@@ -82,25 +87,57 @@ class NavActivity : AppCompatActivity() {
                 speedStr = "%,.1f".format(Locale.ENGLISH, location.speed)
             }
             msg= "${pos.latitude},${pos.longitude} (${location.accuracy?.toInt()}) ${location.heading?.toInt()}, $speedStr"
+            findViewById<TextView>(R.id.statusView).text = msg
 
-            // if status waitloc -> to onroute, find nearest points, target to next
-            // if close to next, switch to next.next
-            // adjust bearing to next
-            // use Geo class  - methods distance, course
-            //
+            if (status == Status.NoRoute || status == Status.Finished) return
+
             route?.let {
-                if (it.geometry.points.size > 1) {
-                    val p0 = it.geometry.points[0]
-                    val p1 = it.geometry.points[1]
-                    val d0 = (Geo::distance)(pos, p0).toInt()
-                    val d1 = (Geo::distance)(pos, p1).toInt()
-                    val a0 = (Geo::course)(pos, p0).toInt()
-                    val a1 = (Geo::course)(pos, p1).toInt()
-                    findViewById<TextView>(R.id.routeView).text = "$d0 ($a0); $d1($a1)"
+                var closestPoint = 0
+                var closestDist =  (Geo::distance)(pos, it.geometry.points[0])
+                it.geometry.points.forEachIndexed { i, p ->
+                    val d = (Geo::distance)(pos, p)
+                    if (d < closestDist) {
+                        closestDist = d
+                        closestPoint = i
+                    }
+                }
+
+                when (status) {
+                    Status.Wait -> {
+                        if (closestDist < D) { //On route
+                            findViewById<TextView>(R.id.routeView).text =
+                                "$closestPoint; ${closestDist.toInt()} - ON ROUTE"
+                            status = Status.OnRoute
+                        } else {
+                            val p = it.geometry.points[closestPoint]
+                            findViewById<TextView>(R.id.routeView).text =
+                                "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - OFF ROUTE"
+                                    // course: angle from NORTH to Vec(pos->p0)
+                        }
+                    }
+                    Status.OnRoute -> {
+                        if (closestDist < D) { //On route
+                            if (closestPoint == it.geometry.points.size - 1 && closestDist <= D_TARG) {
+                                status = Status.Finished
+                                findViewById<TextView>(R.id.routeView).text = "FINISHED"
+                                return
+                            }
+                            // follow...
+                        } else {
+                            val p = it.geometry.points[closestPoint]
+                            findViewById<TextView>(R.id.routeView).text =
+                                "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - LOST ROUTE"
+                            // lost route...
+                            status = Status.Wait
+                        }
+                    }
+                    else -> {
+
+                    }
                 }
             }
         }
-        findViewById<TextView>(R.id.statusView).text = msg
+
     }
 
     fun onTurn(view: View) {
