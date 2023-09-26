@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import com.yandex.mapkit.geometry.Geo
+import com.yandex.mapkit.geometry.Segment
 import com.yandex.mapkit.location.Location
 import com.yandex.mapkit.transport.masstransit.Route
 import java.util.Locale
@@ -26,7 +27,8 @@ class NavActivity : AppCompatActivity() {
     private  lateinit var locator: Locator
     private var route : Route? = null
     private var status = Status.Wait
-    private val D = 10f  // Close to route
+    private val D_SNAP = 10f  // Close to route
+    private val D_LOST = 15f  // Lost route
     private val D_TARG = 5f  // Arrival
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,40 +94,58 @@ class NavActivity : AppCompatActivity() {
             if (status == Status.NoRoute || status == Status.Finished) return
 
             route?.let {
-                var closestPoint = 0
-                var closestDist =  (Geo::distance)(pos, it.geometry.points[0])
-                it.geometry.points.forEachIndexed { i, p ->
+                var points = it.geometry.points
+                var cpi = 0
+                var cdist =  (Geo::distance)(pos, points[0])
+                points.forEachIndexed { i, p ->
                     val d = (Geo::distance)(pos, p)
-                    if (d < closestDist) {
-                        closestDist = d
-                        closestPoint = i
+                    if (d < cdist) {
+                        cdist = d
+                        cpi = i
                     }
                 }
-                val p = it.geometry.points[closestPoint]
-                var text = ""
+
+                var cseg = when (cpi) {
+                    0 -> 0
+                    points.size - 1 -> points.size - 2
+                    else -> {
+                        val dprev = (Geo::closestPoint)(pos, Segment(points[cpi-1], points[cpi]))
+                        val dnext = (Geo::closestPoint)(pos, Segment(points[cpi], points[cpi+1]))
+                        if ((Geo::distance)(pos, dprev) < (Geo::distance)(pos, dnext)) cpi-1
+                        else cpi
+                    }
+                }
+                val spoint = (Geo::closestPoint)(pos, Segment(points[cseg], points[cseg+1])) // closest point on seg
+                val sdist = ((Geo::distance)(pos, spoint))// dist to seg
+                val tpi = cseg + 1 // target
+                val tpoint = points[tpi] //
+                var tdist =  (Geo::distance)(pos, points[tpi])
+
+                var text = "$cpi (${cdist.toInt()}) , $cseg (${cdist.toInt()}), $tpi (${tdist.toInt()}); ${(Geo::course)(pos, tpoint).toInt()}"
+                var stat = ""
 
                 when (status) {
                     Status.Wait -> {
-                        if (closestDist < D) { //On route
-                            text = "$closestPoint; ${closestDist.toInt()} - ON ROUTE"
+                        if (cdist < D_SNAP) { //On route
+                            stat = "ON ROUTE"
                             status = Status.OnRoute
                         } else {
-                            text = "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - OFF ROUTE"
-                                    // course: angle from NORTH to Vec(pos->p0)
+                            stat = "OFF ROUTE"
+                            // course: angle from NORTH to Vec(pos->p0)
                         }
                     }
                     Status.OnRoute -> {
-                        if (closestDist < D) { //On route
-                            if (closestPoint == it.geometry.points.size - 1 && closestDist <= D_TARG) {
+                        if (cdist < D_LOST) { //On route
+                            if (cpi == points.size - 1 && cdist <= D_TARG) {
                                 status = Status.Finished
                                 findViewById<TextView>(R.id.routeView).text = "FINISHED"
                                 return
                             }
                             // follow...
-                            text = "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - FOLLOW"
+                            stat = "FOLLOW"
                             // follow
                         } else {
-                            text = "$closestPoint; ${closestDist.toInt()} ${(Geo::course)(pos, p).toInt()} - LOST ROUTE"
+                            stat = "LOST ROUTE"
                             // lost route...
                             status = Status.Wait
                         }
@@ -134,8 +154,8 @@ class NavActivity : AppCompatActivity() {
 
                     }
                 }
-                findViewById<TextView>(R.id.routeView).text = text
-                findViewById<TextView>(R.id.textView).text = closestDist.toString()
+                findViewById<TextView>(R.id.routeView).text = text + " " + stat
+                findViewById<TextView>(R.id.textView).text = tdist.toString()
             }
         }
 
