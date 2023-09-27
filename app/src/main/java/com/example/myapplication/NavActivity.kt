@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import com.yandex.mapkit.geometry.Geo
@@ -13,6 +14,7 @@ import com.yandex.mapkit.geometry.Segment
 import com.yandex.mapkit.location.Location
 import com.yandex.mapkit.transport.masstransit.Route
 import java.util.Locale
+import kotlin.math.roundToInt
 
 
 class NavActivity : AppCompatActivity() {
@@ -20,16 +22,18 @@ class NavActivity : AppCompatActivity() {
     private val TAG = "NAV"
     private val icons = arrayOf(R.drawable.baseline_arrow_upward, R.drawable.baseline_arrow_right,
         R.drawable.baseline_arrow_downward, R.drawable.baseline_arrow_left, )
-    private val testText = arrayOf("10", "100", "500", "1000")
+    //private val testText = arrayOf("10", "100", "500", "1000")
     private val announce = arrayOf("Вперед", "Направо", "Назад", "Налево")
     private lateinit var drawables: ArrayList<Drawable>
-    private var dir = 0
+    //private var dir = 0
     private  lateinit var locator: Locator
     private var route : Route? = null
     private var status = Status.Wait
     private val D_SNAP = 10f  // Close to route
     private val D_LOST = 15f  // Lost route
     private val D_TARG = 5f  // Arrival
+    private val D_ACC = 10f  // Accuracy
+    private val D_SPEED = 0.1f  // Speed
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,10 +95,19 @@ class NavActivity : AppCompatActivity() {
             msg= "${pos.latitude},${pos.longitude} (${location.accuracy?.toInt()}) ${location.heading?.toInt()}, $speedStr"
             findViewById<TextView>(R.id.statusView).text = msg
 
-            if (status == Status.NoRoute || status == Status.Finished) return
+            if (status == Status.NoRoute || status == Status.Finished) return // add accuracy and heading check
+
+            if (location.accuracy == null || location.accuracy!! > D_ACC) {
+                Toast.makeText(applicationContext, "LOW ACCURACY", Toast.LENGTH_SHORT).show()
+                return
+            }
+            if (location.speed == null || location.heading == null || location.speed!! < D_SPEED) {
+                Toast.makeText(applicationContext, "SPEED TOO LOW", Toast.LENGTH_SHORT).show()
+                return
+            }
 
             route?.let {
-                var points = it.geometry.points
+                val points = it.geometry.points
                 var cpi = 0
                 var cdist =  (Geo::distance)(pos, points[0])
                 points.forEachIndexed { i, p ->
@@ -120,8 +133,9 @@ class NavActivity : AppCompatActivity() {
                 val tpi = cseg + 1 // target
                 val tpoint = points[tpi] //
                 var tdist =  (Geo::distance)(pos, points[tpi])
+                val tcourse = (Geo::course)(pos, tpoint)
 
-                var text = "$cpi (${cdist.toInt()}) , $cseg (${cdist.toInt()}), $tpi (${tdist.toInt()}); ${(Geo::course)(pos, tpoint).toInt()}"
+                var text = "$cpi (${cdist.toInt()}) , $cseg (${cdist.toInt()}), $tpi (${tdist.toInt()}); ${tcourse.toInt()}"
                 var stat = ""
 
                 when (status) {
@@ -147,6 +161,7 @@ class NavActivity : AppCompatActivity() {
                         } else {
                             stat = "LOST ROUTE"
                             // lost route...
+                            // target to the closest seg!!!
                             status = Status.Wait
                         }
                     }
@@ -155,19 +170,32 @@ class NavActivity : AppCompatActivity() {
                     }
                 }
                 findViewById<TextView>(R.id.routeView).text = text + " " + stat
-                findViewById<TextView>(R.id.textView).text = tdist.toString()
+                findViewById<TextView>(R.id.textView).text = tdist.toInt().toString()
+                Toast.makeText(applicationContext, stat, Toast.LENGTH_SHORT).show()
+
+                location.heading?.let {
+                    var cdir = tcourse - it
+                    if (cdir < 0) {
+                        cdir += 360
+                    }
+                    val dir =  (cdir / 90.0).roundToInt() % 4
+                    findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
+                    // TTS.speak(announce[dir]) // + dist
+                }
+
             }
         }
 
     }
 
     fun onTurn(view: View) {
-        //Toast.makeText(applicationContext, "Turn", Toast.LENGTH_SHORT).show()
+        /*
         dir = (dir + 1) % 4
         findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
         findViewById<TextView>(R.id.textView).text = testText[dir]
         TTS.speak(announce[dir])
         findViewById<TextView>(R.id.statusView).text = announce[dir]
+         */
     }
 }
 
