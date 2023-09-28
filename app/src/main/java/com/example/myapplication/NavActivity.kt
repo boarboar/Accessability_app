@@ -20,20 +20,25 @@ import kotlin.math.roundToInt
 class NavActivity : AppCompatActivity() {
     enum class Status { NoRoute, Wait, OnRoute, Finished }
     private val TAG = "NAV"
-    private val icons = arrayOf(R.drawable.baseline_arrow_upward, R.drawable.baseline_arrow_right,
-        R.drawable.baseline_arrow_downward, R.drawable.baseline_arrow_left, )
-    //private val testText = arrayOf("10", "100", "500", "1000")
-    private val announce = arrayOf("Вперед", "Направо", "Назад", "Налево")
+    private val NCOURSE = 8
+    private val icons = arrayOf(R.drawable.baseline_arrow_upward, R.drawable.baseline_north_east_24,
+        R.drawable.baseline_arrow_right, R.drawable.baseline_south_east_24,
+        R.drawable.baseline_arrow_downward, R.drawable.baseline_south_west_24,
+        R.drawable.baseline_arrow_left, R.drawable.baseline_north_west_24,)
+    //private val test_Text = arrayOf("10", "100", "500", "1000")
+    private val announce = arrayOf("Вперед", "Правее", "Направо",
+        "Назад", "Назад", "Назад",
+        "Налево", "Левее")
     private lateinit var drawables: ArrayList<Drawable>
-    //private var dir = 0
+    private var test_Dir = 0
     private  lateinit var locator: Locator
     private var route : Route? = null
     private var status = Status.Wait
     private val D_SNAP = 10f  // Close to route
     private val D_LOST = 15f  // Lost route
     private val D_TARG = 5f  // Arrival
-    private val D_ACC = 10f  // Accuracy
-    private val D_SPEED = 0.1f  // Speed
+    private val D_ACC = 7f  // Accuracy
+    private val D_SPEED = 0.2f  // Speed
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,27 +134,23 @@ class NavActivity : AppCompatActivity() {
                     }
                 }
                 val spoint = (Geo::closestPoint)(pos, Segment(points[cseg], points[cseg+1])) // closest point on seg
-                val sdist = ((Geo::distance)(pos, spoint))// dist to seg
+                val sdist = (Geo::distance)(pos, spoint)
                 val tpi = cseg + 1 // target
-                val tpoint = points[tpi] //
-                var tdist =  (Geo::distance)(pos, points[tpi])
-                val tcourse = (Geo::course)(pos, tpoint)
-
-                var text = "$cpi (${cdist.toInt()}) , $cseg (${cdist.toInt()}), $tpi (${tdist.toInt()}); ${tcourse.toInt()}"
+                var tpoint = points[tpi] //next point on closest segment
                 var stat = ""
 
                 when (status) {
                     Status.Wait -> {
-                        if (cdist < D_SNAP) { //On route
+                        if (sdist < D_SNAP) { //On route
                             stat = "ON ROUTE"
                             status = Status.OnRoute
                         } else {
                             stat = "OFF ROUTE"
-                            // course: angle from NORTH to Vec(pos->p0)
+                            tpoint = spoint // target to the closest seg
                         }
                     }
                     Status.OnRoute -> {
-                        if (cdist < D_LOST) { //On route
+                        if (sdist < D_LOST) { //On route
                             if (cpi == points.size - 1 && cdist <= D_TARG) {
                                 status = Status.Finished
                                 findViewById<TextView>(R.id.routeView).text = "FINISHED"
@@ -157,18 +158,21 @@ class NavActivity : AppCompatActivity() {
                             }
                             // follow...
                             stat = "FOLLOW"
-                            // follow
-                        } else {
+                        } else { // lost route...
                             stat = "LOST ROUTE"
-                            // lost route...
-                            // target to the closest seg!!!
                             status = Status.Wait
+                            tpoint = spoint // target to the closest seg
                         }
                     }
                     else -> {
 
                     }
                 }
+
+                var tdist =  (Geo::distance)(pos, tpoint)
+                val tcourse = (Geo::course)(pos, tpoint) // course: angle from NORTH to Vec(pos->p0)
+
+                var text = "$cpi (${cdist.toInt()}) , $cseg (${cdist.toInt()}), $tpi (${tdist.toInt()}); ${tcourse.toInt()}"
                 findViewById<TextView>(R.id.routeView).text = text + " " + stat
                 findViewById<TextView>(R.id.textView).text = tdist.toInt().toString()
                 Toast.makeText(applicationContext, stat, Toast.LENGTH_SHORT).show()
@@ -178,7 +182,8 @@ class NavActivity : AppCompatActivity() {
                     if (cdir < 0) {
                         cdir += 360
                     }
-                    val dir =  (cdir / 90.0).roundToInt() % 4
+                    val seg = 360 / NCOURSE
+                    val dir =  (cdir / seg).roundToInt() % NCOURSE
                     findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
                     // TTS.speak(announce[dir]) // + dist
                 }
@@ -189,13 +194,13 @@ class NavActivity : AppCompatActivity() {
     }
 
     fun onTurn(view: View) {
-        /*
-        dir = (dir + 1) % 4
-        findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
-        findViewById<TextView>(R.id.textView).text = testText[dir]
-        TTS.speak(announce[dir])
-        findViewById<TextView>(R.id.statusView).text = announce[dir]
-         */
+        val seg = 360 / NCOURSE
+        test_Dir = (test_Dir + 1) % NCOURSE
+        findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[test_Dir])
+        findViewById<TextView>(R.id.textView).text = (test_Dir * seg).toString()
+        TTS.speak(announce[test_Dir])
+        findViewById<TextView>(R.id.statusView).text = announce[test_Dir]
+
     }
 }
 
