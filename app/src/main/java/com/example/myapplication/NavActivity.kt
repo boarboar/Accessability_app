@@ -18,7 +18,6 @@ import kotlin.math.roundToInt
 
 
 class NavActivity : AppCompatActivity() {
-    enum class Status { NoRoute, Wait, OnRoute, Finished }
     private val TAG = "NAV"
     private val NCOURSE = 8
     private val icons = arrayOf(R.drawable.baseline_arrow_upward, R.drawable.baseline_north_east_24,
@@ -33,12 +32,7 @@ class NavActivity : AppCompatActivity() {
     private var test_Dir = 0
     private  lateinit var locator: Locator
     private var route : Route? = null
-    private var status = Status.Wait
-    private val D_SNAP = 10f  // Close to route
-    private val D_LOST = 15f  // Lost route
-    private val D_TARG = 5f  // Arrival
-    private val D_ACC = 7f  // Accuracy
-    private val D_SPEED = 0.2f  // Speed
+    private val navigator =  Navigator()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +40,7 @@ class NavActivity : AppCompatActivity() {
         drawables = icons.map { AppCompatResources.getDrawable(applicationContext, it) } as ArrayList<Drawable>
         locator = Locator.getInstance(this)
     }
-
+    /*
     override fun onStart() {
         super.onStart()
         Log.i( TAG, "onStart")
@@ -56,10 +50,10 @@ class NavActivity : AppCompatActivity() {
         super.onStop()
         Log.i( TAG, "onStop")
     }
+   */
 
     override fun onResume() {
         super.onResume()
-        status = Status.NoRoute
         locator.subscribeToLocationUpdate(this::onLocationUpdate)
         route = locator.loadRoute(false)
         route?.let {
@@ -71,7 +65,7 @@ class NavActivity : AppCompatActivity() {
             // it seems at least first two points are coincide
             Log.i( TAG, "Route loaded $npoints, $nwpoints, $nsects")
             if (it.geometry.points.size > 1) {
-                status = Status.Wait
+                //status = Status.Wait
                 var p0 = it.geometry.points[0]
                 it.geometry.points.take(10).forEachIndexed() { i, p ->
                     Log.i( TAG, "$i ${(Geo::distance)(p, p0).toInt()} ${(Geo::course)(p, p0).toInt()}")
@@ -79,6 +73,7 @@ class NavActivity : AppCompatActivity() {
                 }
             }
         }
+        navigator.route = route
         Log.i( TAG, "onResume")
     }
 
@@ -99,101 +94,36 @@ class NavActivity : AppCompatActivity() {
             }
             msg= "${pos.latitude},${pos.longitude} (${location.accuracy?.toInt()}) ${location.heading?.toInt()}, $speedStr"
             findViewById<TextView>(R.id.statusView).text = msg
+            val res = navigator.update(location)
 
-            if (status == Status.NoRoute || status == Status.Finished) return // add accuracy and heading check
+            // check for dup stat here...
+            Toast.makeText(applicationContext, res.type.toString(), Toast.LENGTH_SHORT).show()
+            findViewById<TextView>(R.id.routeView).text = res.debugStr
 
-            if (location.accuracy == null || location.accuracy!! > D_ACC) {
-                Toast.makeText(applicationContext, "LOW ACCURACY", Toast.LENGTH_SHORT).show()
-                return
-            }
-            if (location.speed == null || location.heading == null || location.speed!! < D_SPEED) {
-                Toast.makeText(applicationContext, "SPEED TOO LOW", Toast.LENGTH_SHORT).show()
-                return
-            }
-
-            route?.let {
-                val points = it.geometry.points
-                var cpi = 0
-                var cdist =  (Geo::distance)(pos, points[0])
-                points.forEachIndexed { i, p ->
-                    val d = (Geo::distance)(pos, p)
-                    if (d < cdist) {
-                        cdist = d
-                        cpi = i
+            when (res.type) {
+                Navigator.Result.ResultType.Ignore, Navigator.Result.ResultType.LowAccuracy,
+                Navigator.Result.ResultType.LowSpeed, Navigator.Result.ResultType.Finished,-> { return }
+                Navigator.Result.ResultType.Proceed -> {
+                    if (navigator.status == Navigator.Status.LostRoute) {
+                        Toast.makeText(applicationContext, navigator.status.toString(), Toast.LENGTH_SHORT).show()
                     }
-                }
-
-                var cseg = when (cpi) {
-                    0 -> 0
-                    points.size - 1 -> points.size - 2
-                    else -> {
-                        val dprev = (Geo::closestPoint)(pos, Segment(points[cpi-1], points[cpi]))
-                        val dnext = (Geo::closestPoint)(pos, Segment(points[cpi], points[cpi+1]))
-                        if ((Geo::distance)(pos, dprev) < (Geo::distance)(pos, dnext)) cpi-1
-                        else cpi
-                    }
-                }
-                val spoint = (Geo::closestPoint)(pos, Segment(points[cseg], points[cseg+1])) // closest point on seg
-                val sdist = (Geo::distance)(pos, spoint)
-                val tpi = cseg + 1 // target
-                var tpoint = points[tpi] //next point on closest segment
-                var stat = ""
-
-                when (status) {
-                    Status.Wait -> {
-                        if (sdist < D_SNAP) { //On route
-                            stat = "ON ROUTE"
-                            status = Status.OnRoute
-                        } else {
-                            stat = "OFF ROUTE"
-                            tpoint = spoint // target to the closest seg
-                        }
-                    }
-                    Status.OnRoute -> {
-                        if (sdist < D_LOST) { //On route
-                            if (cpi == points.size - 1 && cdist <= D_TARG) {
-                                status = Status.Finished
-                                findViewById<TextView>(R.id.routeView).text = "FINISHED"
-                                return
-                            }
-                            // follow...
-                            stat = "FOLLOW"
-                        } else { // lost route...
-                            stat = "LOST ROUTE"
-                            status = Status.Wait
-                            tpoint = spoint // target to the closest seg
-                        }
-                    }
-                    else -> {
-
-                    }
-                }
-
-                var tdist =  (Geo::distance)(pos, tpoint)
-                val tcourse = (Geo::course)(pos, tpoint) // course: angle from NORTH to Vec(pos->p0)
-
-                var text = "$cpi (${cdist.toInt()}) , $cseg (${cdist.toInt()}), $tpi (${tdist.toInt()}); ${tcourse.toInt()}"
-                findViewById<TextView>(R.id.routeView).text = text + " " + stat
-                findViewById<TextView>(R.id.textView).text = tdist.toInt().toString()
-                Toast.makeText(applicationContext, stat, Toast.LENGTH_SHORT).show()
-
-                location.heading?.let {
-                    var cdir = tcourse - it
+                    var cdir = res.heading
                     if (cdir < 0) {
                         cdir += 360
                     }
-                    val seg = 360 / NCOURSE
+                    val seg = 360f / NCOURSE
                     val dir =  (cdir / seg).roundToInt() % NCOURSE
                     findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
+                    findViewById<TextView>(R.id.textView).text = res.dist.toInt().toString()
+
                     // TTS.speak(announce[dir]) // + dist
                 }
-
             }
         }
-
     }
 
     fun onTurn(view: View) {
+        // test director
         val seg = 360 / NCOURSE
         test_Dir = (test_Dir + 1) % NCOURSE
         findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[test_Dir])
