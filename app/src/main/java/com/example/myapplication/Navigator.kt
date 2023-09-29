@@ -18,10 +18,13 @@ class Navigator {
     private val D_TARG = 7.0  // Arrival
     private val D_ACC =  7.0  // Accuracy
     private val D_SPEED = 0.3  // Speed
+    private var ipoint = 0
+
     var route: Route? = null
         set(value) {
             field = value
             status = if (value == null || value.geometry.points.size < 2) Status.NoRoute else Status.Wait
+            ipoint = 0
         }
 
     fun update(location: Location) : Result {
@@ -39,11 +42,13 @@ class Navigator {
         val points = route!!.geometry.points
         var cpi = 0
         var cdist = (Geo::distance)(pos, points[0])
-        val tolerance = min(location.accuracy!!, D_ACC) / 2
+        val tolerance = min(location.accuracy!!, D_ACC)
 
-        points.forEachIndexed { i, p ->
+        //points.forEachIndexed { i, p ->
+        for (i in ipoint until points.size) {
+            val p = points[i]
             val d = (Geo::distance)(pos, p)
-            if (d < cdist || d < tolerance) { // thus we will find the most ahead close point
+            if (d < cdist || d < tolerance) { // thus we will find the most ahead laying close point
                 cdist = d
                 cpi = i
             }
@@ -66,6 +71,7 @@ class Navigator {
         val sdist = (Geo::distance)(pos, spoint)
         val tpi = cseg + 1 // target
         var tpoint = points[tpi] //next point on closest segment
+        ipoint = cseg
 
         when (status) {
             Status.Wait, Status.LostRoute -> {
