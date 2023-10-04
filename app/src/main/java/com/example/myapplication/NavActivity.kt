@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.graphics.PorterDuff
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +10,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import com.yandex.mapkit.geometry.Geo
 import com.yandex.mapkit.geometry.Segment
 import com.yandex.mapkit.location.Location
@@ -23,7 +25,7 @@ class NavActivity : AppCompatActivity() {
     private val icons = arrayOf(R.drawable.baseline_arrow_upward, R.drawable.baseline_north_east_24,
         R.drawable.baseline_arrow_right, R.drawable.baseline_south_east_24,
         R.drawable.baseline_arrow_downward, R.drawable.baseline_south_west_24,
-        R.drawable.baseline_arrow_left, R.drawable.baseline_north_west_24,)
+        R.drawable.baseline_arrow_left, R.drawable.baseline_north_west_24, R.drawable.baseline_gps_not_fixed_24)
     //private val test_Text = arrayOf("10", "100", "500", "1000")
     private val announce = arrayOf("Вперед", "Правее", "Направо",
         "Назад", "Назад", "Назад",
@@ -74,6 +76,7 @@ class NavActivity : AppCompatActivity() {
             }
         }
         navigator.route = route
+        findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[drawables.size-1])
         Log.i( TAG, "onResume")
     }
 
@@ -102,7 +105,10 @@ class NavActivity : AppCompatActivity() {
 
             when (res.type) {
                 Navigator.Result.ResultType.Ignore, Navigator.Result.ResultType.LowAccuracy,
-                Navigator.Result.ResultType.LowSpeed, Navigator.Result.ResultType.Finished,-> { return }
+                Navigator.Result.ResultType.LowSpeed, Navigator.Result.ResultType.Finished,-> {
+                    findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[drawables.size-1])
+                    return
+                }
                 Navigator.Result.ResultType.Proceed -> {
                     if (navigator.status == Navigator.Status.LostRoute) {
                         Toast.makeText(applicationContext, navigator.status.toString(), Toast.LENGTH_SHORT).show()
@@ -113,6 +119,8 @@ class NavActivity : AppCompatActivity() {
                     }
                     val seg = 360f / NCOURSE
                     val dir =  (cdir / seg).roundToInt() % NCOURSE
+                    val color =  if (navigator.status == Navigator.Status.LostRoute) R.color.red else R.color.black
+                    findViewById<ImageView>(R.id.imageView).setColorFilter(ContextCompat.getColor(applicationContext, color), PorterDuff.Mode.SRC_IN);
                     findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
                     findViewById<TextView>(R.id.textView).text = res.dist.toInt().toString()
 
