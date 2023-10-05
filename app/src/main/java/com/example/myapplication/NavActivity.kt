@@ -77,6 +77,7 @@ class NavActivity : AppCompatActivity() {
         }
         navigator.route = route
         findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[drawables.size-1])
+        findViewById<TextView>(R.id.textView).text = "---"
         Log.i( TAG, "onResume")
     }
 
@@ -119,7 +120,10 @@ class NavActivity : AppCompatActivity() {
                     }
                     val seg = 360f / NCOURSE
                     val dir =  (cdir / seg).roundToInt() % NCOURSE
-                    val color =  if (navigator.status == Navigator.Status.LostRoute) R.color.red else R.color.black
+                    val color =  if (navigator.status == Navigator.Status.LostRoute) R.color.red else {
+                        if (location.accuracy!! > 5 ) R.color.yellow
+                        else R.color.black
+                    }
                     findViewById<ImageView>(R.id.imageView).setColorFilter(ContextCompat.getColor(applicationContext, color), PorterDuff.Mode.SRC_IN);
                     findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
                     if (res.jump != null) {

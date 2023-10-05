@@ -18,7 +18,7 @@ class Navigator {
     private val D_TARG = D_ACC  // Arrival
     private val D_SNAP = D_ACC  // Close to route
     private val D_LOST = D_SNAP * 1.5  // Lost route
-    private val D_JUMP = 2.0 // jump to next
+    private val D_JUMP = 2.5 // jump to next
     private val D_SPEED = 0.4  // Speed
     private val D_TOOFAR = 200 // do not look for the closest that far
     private var ipoint = 0
@@ -98,7 +98,8 @@ class Navigator {
                     }
                     // follow...
                     val distToNext = (Geo::distance)(pos, tpoint)
-                    if (distToNext < D_JUMP && tpi < points.size-1) { // use velocity to predict
+                    val predict = min(D_JUMP + location.speed!!, location.accuracy!!)
+                    if (distToNext < predict && tpi < points.size-1) { // use velocity to predict
                         // jump to the next segment
                         tpi += 1
                         tpoint = points[tpi]
