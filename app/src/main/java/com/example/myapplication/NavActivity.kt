@@ -122,7 +122,10 @@ class NavActivity : AppCompatActivity() {
                     val color =  if (navigator.status == Navigator.Status.LostRoute) R.color.red else R.color.black
                     findViewById<ImageView>(R.id.imageView).setColorFilter(ContextCompat.getColor(applicationContext, color), PorterDuff.Mode.SRC_IN);
                     findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
-                    findViewById<TextView>(R.id.textView).text = res.dist.toInt().toString()
+                    if (res.jump != null) {
+                        findViewById<TextView>(R.id.textView).text = "${res.dist.toInt()} (${res.jump})"
+                    }
+                    else findViewById<TextView>(R.id.textView).text = res.dist.toInt().toString()
 
                     // TTS.speak(announce[dir]) // + dist
                 }

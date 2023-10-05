@@ -7,7 +7,8 @@ import com.yandex.mapkit.transport.masstransit.Route
 import kotlin.math.min
 
 class Navigator {
-    data class Result(val type: ResultType, val dist: Int = 0, val heading: Int = 0, val debugStr : String = "") {
+    data class Result(val type: ResultType, val dist: Int = 0, val heading: Int = 0,
+                      val jump: Int? = null, val debugStr : String = "") {
         enum class ResultType { Ignore, LowAccuracy, LowSpeed, Finished, Proceed }
     }
 
@@ -17,6 +18,7 @@ class Navigator {
     private val D_TARG = D_ACC  // Arrival
     private val D_SNAP = D_ACC  // Close to route
     private val D_LOST = D_SNAP * 1.5  // Lost route
+    private val D_JUMP = 2.0 // jump to next
     private val D_SPEED = 0.4  // Speed
     private val D_TOOFAR = 200 // do not look for the closest that far
     private var ipoint = 0
@@ -51,12 +53,12 @@ class Navigator {
         for (i in ipoint until points.size) {
             val p = points[i]
             val d = (Geo::distance)(pos, p)
+            if (d > D_TOOFAR && cdist < D_LOST) break
             if (d < cdist || d < tolerance) { // thus we will find the most ahead laying close point
                 cdist = d
                 cpi = i
             }
         }
-        ipoint = cpi //!!!
 
         var cseg = when (cpi) {
             0 -> 0
@@ -73,9 +75,10 @@ class Navigator {
             Segment(points[cseg], points[cseg + 1])
         ) // closest point on seg
         val sdist = (Geo::distance)(pos, spoint)
-        val tpi = cseg + 1 // target
+        var tpi = cseg + 1 // target
         var tpoint = points[tpi] //next point on closest segment
-        ipoint = cseg
+        var jump : Int?= null
+        //ipoint = cseg
 
         when (status) {
             Status.Wait, Status.LostRoute -> {
@@ -94,6 +97,15 @@ class Navigator {
                         return Result(Result.ResultType.Finished)
                     }
                     // follow...
+                    val distToNext = (Geo::distance)(pos, tpoint)
+                    if (distToNext < D_JUMP && tpi < points.size-1) { // use velocity to predict
+                        // jump to the next segment
+                        tpi += 1
+                        tpoint = points[tpi]
+                        jump = distToNext.toInt()
+                    }
+
+
                 } else { // lost route...
                     status = Status.LostRoute
                     tpoint = spoint // target to the closest seg
@@ -108,10 +120,14 @@ class Navigator {
         val tcourse = (Geo::course)(pos, tpoint) // course: angle from NORTH to Vec(pos->p0)
         var heading = (tcourse - location.heading!!).toInt()
 
-        var debugText =
-            "$cpi (${cdist.toInt()}), $cseg (${cdist.toInt()}), $tpi ($tdist $heading) $status}"
+        //var debugText =
+        //    "$cpi (${cdist.toInt()}), $cseg (${cdist.toInt()}), $tpi ($tdist $heading) $status}"
 
-        return Result(Result.ResultType.Proceed, tdist, heading, debugText)
+        var debugText = "$cpi, $tpi, ${sdist.toInt()}, ($tdist $heading) $status ${jump}"
+
+        ipoint = cpi
+
+        return Result(Result.ResultType.Proceed, tdist, heading, jump, debugText)
     }
 /*
     fun update(location: Location) : Result {
