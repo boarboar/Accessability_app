@@ -20,7 +20,7 @@ class Navigator {
     private val D_SNAP = D_ACC  // Close to route
     private val D_LOST = D_SNAP * 1.5  // Lost route
     private val D_JUMP = 2.5 // jump to next
-    private val D_SPEED = 0.4  // Speed
+    private val D_SPEED = 0.3  // Speed
     private val D_TOOFAR = 200 // do not look for the closest that far
     private var ipoint = 0
     //private var iseg = 0
@@ -74,7 +74,8 @@ class Navigator {
             else -> {
                 val dprev = (Geo::closestPoint)(pos, Segment(points[cpi - 1], points[cpi]))
                 val dnext = (Geo::closestPoint)(pos, Segment(points[cpi], points[cpi + 1]))
-                if ((Geo::distance)(pos, dprev) < (Geo::distance)(pos, dnext)) cpi - 1
+                val prevseglen = (Geo::distance)(points[cpi - 1], points[cpi])
+                if ((Geo::distance)(pos, dprev) < (Geo::distance)(pos, dnext) && prevseglen > D_JUMP) cpi - 1
                 else cpi
             }
         }

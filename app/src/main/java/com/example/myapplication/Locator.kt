@@ -269,8 +269,8 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
             return "Местоположение определяется, попробуйте повторить через несколько секунд"
         }
         val points: MutableList<RequestPoint> = ArrayList()
-        points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
-        points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
+        points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null, null))
+        points.add(RequestPoint(to, RequestPointType.WAYPOINT, null, null))
         pedestrianRouter.requestRoutes(points, TimeOptions(), RouterProxy(this, false, onSuccess, onFailure))
         return "строим пеший маршрут"
     }
@@ -280,8 +280,8 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
             return "Местоположение определяется, попробуйте повторить через несколько секунд"
         }
         val points: MutableList<RequestPoint> = ArrayList()
-        points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null))
-        points.add(RequestPoint(to, RequestPointType.WAYPOINT, null))
+        points.add(RequestPoint(location!!.position, RequestPointType.WAYPOINT, null, null))
+        points.add(RequestPoint(to, RequestPointType.WAYPOINT, null, null))
         val options = TransitOptions(FilterVehicleTypes.NONE.value, TimeOptions())
         masstransitRouter.requestRoutes(points, options, RouterProxy(this, true, onSuccess, onFailure))
         return "строим транспортный маршрут"
