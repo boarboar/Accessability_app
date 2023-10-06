@@ -4,11 +4,12 @@ import com.yandex.mapkit.geometry.Geo
 import com.yandex.mapkit.geometry.Segment
 import com.yandex.mapkit.location.Location
 import com.yandex.mapkit.transport.masstransit.Route
+import kotlin.math.max
 import kotlin.math.min
 
 class Navigator {
     data class Result(val type: ResultType, val dist: Int = 0, val heading: Int = 0,
-                      val jump: Int? = null, val debugStr : String = "") {
+                      val jump: Int? = null, val backJump : Boolean = false, val debugStr : String = "") {
         enum class ResultType { Ignore, LowAccuracy, LowSpeed, Finished, Proceed }
     }
 
@@ -23,6 +24,7 @@ class Navigator {
     private val D_TOOFAR = 200 // do not look for the closest that far
     private var ipoint = 0
     //private var iseg = 0
+    private var prev_itarg = 0
 
     var route: Route? = null
         set(value) {
@@ -30,9 +32,11 @@ class Navigator {
             status = if (value == null || value.geometry.points.size < 2) Status.NoRoute else Status.Wait
             ipoint = 0
             //iseg = 0
+            prev_itarg = 0
         }
 
     fun update(location: Location) : Result {
+
         if (status == Status.NoRoute || status == Status.Finished || route == null)
             return Result(Result.ResultType.Ignore)
 
@@ -42,6 +46,10 @@ class Navigator {
         if (location.speed == null || location.heading == null || location.speed!! < D_SPEED) {
             return Result(Result.ResultType.LowSpeed)
         }
+        /*
+        *  try: if accuracy degrades compar to prev (acc > acc_prev) but still within limits, use extrapolation
+        * with prev course, speed and time passed
+           */
 
         val pos = location.position
         val points = route!!.geometry.points
@@ -98,7 +106,7 @@ class Navigator {
                     }
                     // follow...
                     val distToNext = (Geo::distance)(pos, tpoint)
-                    val predict = min(D_JUMP + location.speed!!, location.accuracy!!)
+                    val predict = max(D_JUMP + location.speed!!, location.accuracy!!) // min to max...
                     if (distToNext < predict && tpi < points.size-1) { // use velocity to predict
                         // jump to the next segment
                         tpi += 1
@@ -124,11 +132,13 @@ class Navigator {
         //var debugText =
         //    "$cpi (${cdist.toInt()}), $cseg (${cdist.toInt()}), $tpi ($tdist $heading) $status}"
 
-        var debugText = "$cpi, $tpi, ${sdist.toInt()}, ($tdist $heading) $status ${jump}"
+        val backJump = tpi < prev_itarg
+        var debugText = "$cpi, $tpi, ${sdist.toInt()}, ($tdist $heading) $status $jump $backJump"
 
         ipoint = cpi
+        prev_itarg = tpi
 
-        return Result(Result.ResultType.Proceed, tdist, heading, jump, debugText)
+        return Result(Result.ResultType.Proceed, tdist, heading, jump, backJump, debugText)
     }
 /*
     fun update(location: Location) : Result {

@@ -159,7 +159,8 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
     //private val MINIMAL_DISTANCE = 1.0
     private val DESIRED_ACCURACY = 0.0 // best
     private val MINIMAL_TIME = 2000L // 2sec
-    private val MINIMAL_DISTANCE = 1.5 // 1.5m
+    //private val MINIMAL_DISTANCE = 1.5 // 1.5m
+    private val MINIMAL_DISTANCE = 0.0 // try this to avoid stall
     private val USE_IN_BACKGROUND = false
     private val TRANSPORT_ROUTE_FILE = "SavedTransportRoute"
     private val PEDESTRIAN_ROUTE_FILE = "SavedPedestrianRoute"
