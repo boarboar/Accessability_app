@@ -8,13 +8,14 @@ import kotlin.math.max
 import kotlin.math.min
 
 class Navigator {
-    data class Result(val type: ResultType, val dist: Int = 0, val heading: Int = 0,
+    data class Result(val type: ResultType, val status: Status,
+                      val dist: Int = 0, val heading: Int = 0,
                       val jump: Int? = null, val backJump : Boolean = false, val debugStr : String = "") {
         enum class ResultType { Ignore, LowAccuracy, LowSpeed, Finished, Proceed }
     }
 
     enum class Status { NoRoute, Wait, OnRoute, LostRoute, Finished }
-    var status = Status.NoRoute
+    private var status = Status.NoRoute
     private val D_ACC =  7.0  // Accuracy
     private val D_TARG = D_ACC  // Arrival
     private val D_SNAP = D_ACC  // Close to route
@@ -38,13 +39,13 @@ class Navigator {
     fun update(location: Location) : Result {
 
         if (status == Status.NoRoute || status == Status.Finished || route == null)
-            return Result(Result.ResultType.Ignore)
+            return Result(Result.ResultType.Ignore, status)
 
         if (location.accuracy == null || location.accuracy!! > D_ACC) {
-            return Result(Result.ResultType.LowAccuracy)
+            return Result(Result.ResultType.LowAccuracy, status)
         }
         if (location.speed == null || location.heading == null || location.speed!! < D_SPEED) {
-            return Result(Result.ResultType.LowSpeed)
+            return Result(Result.ResultType.LowSpeed, status)
         }
         /*
         *  try: if accuracy degrades compar to prev (acc > acc_prev) but still within limits, use extrapolation
@@ -103,7 +104,7 @@ class Navigator {
                 if (sdist < D_LOST) { //On route
                     if (cpi == points.size - 1 && cdist <= D_TARG) {
                         status = Status.Finished
-                        return Result(Result.ResultType.Finished)
+                        return Result(Result.ResultType.Finished, status)
                     }
                     // follow...
                     val distToNext = (Geo::distance)(pos, tpoint)
@@ -129,7 +130,9 @@ class Navigator {
         var tdist = (Geo::distance)(pos, tpoint).toInt()
         val tcourse = (Geo::course)(pos, tpoint) // course: angle from NORTH to Vec(pos->p0)
         var heading = (tcourse - location.heading!!).toInt()
-
+        if (heading < 0) {
+            heading += 360
+        }
         //var debugText =
         //    "$cpi (${cdist.toInt()}), $cseg (${cdist.toInt()}), $tpi ($tdist $heading) $status}"
 
@@ -139,7 +142,7 @@ class Navigator {
         ipoint = cpi
         prev_itarg = tpi
 
-        return Result(Result.ResultType.Proceed, tdist, heading, jump, backJump, debugText)
+        return Result(Result.ResultType.Proceed, status, tdist, heading, jump, backJump, debugText)
     }
 /*
     fun update(location: Location) : Result {

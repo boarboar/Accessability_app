@@ -15,6 +15,7 @@ import com.yandex.mapkit.geometry.Geo
 import com.yandex.mapkit.geometry.Segment
 import com.yandex.mapkit.location.Location
 import com.yandex.mapkit.transport.masstransit.Route
+import java.lang.System.currentTimeMillis
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -22,6 +23,9 @@ import kotlin.math.roundToInt
 class NavActivity : AppCompatActivity() {
     private val TAG = "NAV"
     private val NCOURSE = 8
+    private val ANNOUNCE_PROBLEM_PERIOD= 10_000L
+    private val ANNOUNCE_MOVE_PERIOD= 5_000L
+
     private val icons = arrayOf(R.drawable.baseline_arrow_upward, R.drawable.baseline_north_east_24,
         R.drawable.baseline_arrow_right, R.drawable.baseline_south_east_24,
         R.drawable.baseline_arrow_downward, R.drawable.baseline_south_west_24,
@@ -35,6 +39,8 @@ class NavActivity : AppCompatActivity() {
     private  lateinit var locator: Locator
     private var route : Route? = null
     private val navigator =  Navigator()
+    private var prevAnnouncedResult: Navigator.Result? = null
+    private var prevAnnouncedResultTime: Long = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,6 +97,7 @@ class NavActivity : AppCompatActivity() {
         var msg = "Loc not avail"
         if (location != null) {
             val pos = location.position
+            val now = currentTimeMillis()
             var speedStr = "0"
             if (location.speed != null) {
                 //speedStr = String.format("%.1f", location.speed)
@@ -105,37 +112,50 @@ class NavActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.routeView).text = res.debugStr
 
             when (res.type) {
-                Navigator.Result.ResultType.Ignore, Navigator.Result.ResultType.LowAccuracy,
-                Navigator.Result.ResultType.LowSpeed, Navigator.Result.ResultType.Finished,-> {
+                Navigator.Result.ResultType.Ignore, Navigator.Result.ResultType.Finished,-> {
+                    return
+                }
+                Navigator.Result.ResultType.LowAccuracy, Navigator.Result.ResultType.LowSpeed,-> {
                     findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[drawables.size-1])
+                    if (prevAnnouncedResult == null || res.type != prevAnnouncedResult!!.type || (now - prevAnnouncedResultTime) >= ANNOUNCE_PROBLEM_PERIOD) {
+                        var message = if(res.type == Navigator.Result.ResultType.LowAccuracy) "Недостаточная точность" else "Недостаточная скорость"
+                        Toast.makeText(applicationContext, res.type.toString(), Toast.LENGTH_SHORT).show()
+                        TTS.speak(message)
+                        prevAnnouncedResult = res
+                        prevAnnouncedResultTime = now
+                    }
                     return
                 }
                 Navigator.Result.ResultType.Proceed -> {
-                    if (navigator.status == Navigator.Status.LostRoute) {
-                        Toast.makeText(applicationContext, navigator.status.toString(), Toast.LENGTH_SHORT).show()
-                    }
                     var cdir = res.heading
-                    if (cdir < 0) {
-                        cdir += 360
-                    }
                     val seg = 360f / NCOURSE
                     val dir =  (cdir / seg).roundToInt() % NCOURSE
-                    val color =  if (navigator.status == Navigator.Status.LostRoute) R.color.red else {
+                    val color =  if (res.status == Navigator.Status.LostRoute) R.color.red else {
                         if (res.backJump) R.color.blue
                         else if (location.accuracy!! > 5 ) R.color.yellow
                         else R.color.black
                     }
+                    val dist = res.dist.toInt()
                     findViewById<ImageView>(R.id.imageView).setColorFilter(ContextCompat.getColor(applicationContext, color), PorterDuff.Mode.SRC_IN);
                     findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
                     if (res.backJump) {
-                        findViewById<TextView>(R.id.textView).text = "${res.dist.toInt()} (<<<)"
+                        findViewById<TextView>(R.id.textView).text = "$dist (<<<)"
                     }
                     else if (res.jump != null) {
-                        findViewById<TextView>(R.id.textView).text = "${res.dist.toInt()} (${res.jump})"
+                        findViewById<TextView>(R.id.textView).text = "$dist (${res.jump})"
                     }
-                    else findViewById<TextView>(R.id.textView).text = res.dist.toInt().toString()
+                    else findViewById<TextView>(R.id.textView).text = dist.toString()
 
-                    // TTS.speak(announce[dir]) // + dist
+                    // announces
+                    if (prevAnnouncedResult == null || res.type != prevAnnouncedResult!!.type || res.status != prevAnnouncedResult!!.status
+                        || (now - prevAnnouncedResultTime) >= ANNOUNCE_MOVE_PERIOD) {
+                        var message = if(res.status == Navigator.Status.LostRoute) "Отклонение от маршрута." else ""
+                        message += "${announce[dir]}, $dist метров"
+                        Toast.makeText(applicationContext, res.type.toString(), Toast.LENGTH_SHORT).show()
+                        TTS.speak(message)
+                        prevAnnouncedResult = res
+                        prevAnnouncedResultTime = now
+                    }
                 }
             }
         }
