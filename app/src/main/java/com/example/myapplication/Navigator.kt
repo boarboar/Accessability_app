@@ -11,21 +11,22 @@ class Navigator {
     data class Result(val type: ResultType, val status: Status,
                       val dist: Int = 0, val heading: Int = 0,
                       val jump: Int? = null, val backJump : Boolean = false, val debugStr : String = "") {
-        enum class ResultType { Ignore, LowAccuracy, LowSpeed, Finished, Proceed }
+        enum class ResultType { None, Ignore, LowAccuracy, LowSpeed, Finished, Proceed }
     }
 
     enum class Status { NoRoute, Wait, OnRoute, LostRoute, Finished }
     private var status = Status.NoRoute
-    private val D_ACC =  7.0  // Accuracy
+    private val D_ACC =  7.0  // Accuracy - should be 4.
     private val D_TARG = D_ACC  // Arrival
     private val D_SNAP = D_ACC  // Close to route
     private val D_LOST = D_SNAP * 1.5  // Lost route
     private val D_JUMP = 2.5 // jump to next
-    private val D_SPEED = 0.3  // Speed
+    private val D_SPEED = 0.2  // Speed
     private val D_TOOFAR = 200 // do not look for the closest that far
     private var ipoint = 0
     //private var iseg = 0
     private var prev_itarg = 0
+    val DummyResult = Result(Result.ResultType.None, Status.NoRoute)
 
     var route: Route? = null
         set(value) {

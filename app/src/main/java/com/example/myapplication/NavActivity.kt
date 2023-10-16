@@ -30,7 +30,6 @@ class NavActivity : AppCompatActivity() {
         R.drawable.baseline_arrow_right, R.drawable.baseline_south_east_24,
         R.drawable.baseline_arrow_downward, R.drawable.baseline_south_west_24,
         R.drawable.baseline_arrow_left, R.drawable.baseline_north_west_24, R.drawable.baseline_gps_not_fixed_24)
-    //private val test_Text = arrayOf("10", "100", "500", "1000")
     private val announce = arrayOf("Вперед", "Правее", "Направо",
         "Назад", "Назад", "Назад",
         "Налево", "Левее")
@@ -39,7 +38,7 @@ class NavActivity : AppCompatActivity() {
     private  lateinit var locator: Locator
     private var route : Route? = null
     private val navigator =  Navigator()
-    private var prevAnnouncedResult: Navigator.Result? = null
+    private var prevAnnouncedResult = navigator.DummyResult
     private var prevAnnouncedResultTime: Long = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,17 +47,6 @@ class NavActivity : AppCompatActivity() {
         drawables = icons.map { AppCompatResources.getDrawable(applicationContext, it) } as ArrayList<Drawable>
         locator = Locator.getInstance(this)
     }
-    /*
-    override fun onStart() {
-        super.onStart()
-        Log.i( TAG, "onStart")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.i( TAG, "onStop")
-    }
-   */
 
     override fun onResume() {
         super.onResume()
@@ -100,7 +88,6 @@ class NavActivity : AppCompatActivity() {
             val now = currentTimeMillis()
             var speedStr = "0"
             if (location.speed != null) {
-                //speedStr = String.format("%.1f", location.speed)
                 speedStr = "%,.1f".format(Locale.ENGLISH, location.speed)
             }
             msg= "${pos.latitude},${pos.longitude} (${location.accuracy?.toInt()}) ${location.heading?.toInt()}, $speedStr"
@@ -108,7 +95,7 @@ class NavActivity : AppCompatActivity() {
             val res = navigator.update(location)
 
             // check for dup stat here...
-            Toast.makeText(applicationContext, res.type.toString(), Toast.LENGTH_SHORT).show()
+            //Toast.makeText(applicationContext, res.type.toString(), Toast.LENGTH_SHORT).show()
             findViewById<TextView>(R.id.routeView).text = res.debugStr
 
             when (res.type) {
@@ -117,9 +104,9 @@ class NavActivity : AppCompatActivity() {
                 }
                 Navigator.Result.ResultType.LowAccuracy, Navigator.Result.ResultType.LowSpeed,-> {
                     findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[drawables.size-1])
-                    if (prevAnnouncedResult == null || res.type != prevAnnouncedResult!!.type || (now - prevAnnouncedResultTime) >= ANNOUNCE_PROBLEM_PERIOD) {
-                        var message = if(res.type == Navigator.Result.ResultType.LowAccuracy) "Недостаточная точность" else "Недостаточная скорость"
-                        Toast.makeText(applicationContext, res.type.toString(), Toast.LENGTH_SHORT).show()
+                    if (res.type != prevAnnouncedResult.type || (now - prevAnnouncedResultTime) >= ANNOUNCE_PROBLEM_PERIOD) {
+                        var message = if(res.type == Navigator.Result.ResultType.LowAccuracy) "Низкая точность" else "Идите быстрее"
+                        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
                         TTS.speak(message)
                         prevAnnouncedResult = res
                         prevAnnouncedResultTime = now
@@ -147,16 +134,17 @@ class NavActivity : AppCompatActivity() {
                     else findViewById<TextView>(R.id.textView).text = dist.toString()
 
                     // announces
-                    if (prevAnnouncedResult == null || res.type != prevAnnouncedResult!!.type || res.status != prevAnnouncedResult!!.status
+                    if (res.type != prevAnnouncedResult.type || res.status != prevAnnouncedResult.status
                         || (now - prevAnnouncedResultTime) >= ANNOUNCE_MOVE_PERIOD) {
-                        var message = if(res.status == Navigator.Status.LostRoute) "Отклонение от маршрута." else ""
+                        var message = if(res.status == Navigator.Status.LostRoute) "Отклонились!" else ""
                         message += "${announce[dir]}, $dist метров"
-                        Toast.makeText(applicationContext, res.type.toString(), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
                         TTS.speak(message)
                         prevAnnouncedResult = res
                         prevAnnouncedResultTime = now
                     }
                 }
+                else -> {}
             }
         }
     }
