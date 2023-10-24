@@ -34,6 +34,10 @@ class NavActivity : AppCompatActivity() {
         "Назад", "Назад", "Назад",
         "Налево", "Левее")
     private lateinit var drawables: ArrayList<Drawable>
+    private lateinit var routeInfo: TextView
+    private lateinit var distanceInfo: TextView
+    private lateinit var statusInfo: TextView
+    private lateinit var directionInfo: ImageView
     private var test_Dir = 0
     private  lateinit var locator: Locator
     private var route : Route? = null
@@ -46,6 +50,10 @@ class NavActivity : AppCompatActivity() {
         setContentView(layoutInflater.inflate(R.layout.activity_nav, null))
         drawables = icons.map { AppCompatResources.getDrawable(applicationContext, it) } as ArrayList<Drawable>
         locator = Locator.getInstance(this)
+        routeInfo = findViewById<TextView>(R.id.routeView)
+        distanceInfo = findViewById<TextView>(R.id.textView)
+        statusInfo = findViewById<TextView>(R.id.statusView)
+        directionInfo = findViewById<ImageView>(R.id.imageView)
     }
 
     override fun onResume() {
@@ -56,12 +64,13 @@ class NavActivity : AppCompatActivity() {
             val npoints = it.geometry.points.size // route points (we should use these for nav)
             val nwpoints = it.metadata.wayPoints.size // user-defined start, end, intermediate
             val nsects = it.sections.size
-            findViewById<TextView>(R.id.routeView).text = "Route loaded $npoints, $nwpoints, $nsects"
+            val dist = it.metadata.weight.walkingDistance.value
+            //routeInfo.text = "Route loaded $npoints, $nwpoints, $nsects $dist m"
+            routeInfo.text = "Маршрут: $npoints точек, $dist метров"
             // log 10 first points
             // it seems at least first two points are coincide
-            Log.i( TAG, "Route loaded $npoints, $nwpoints, $nsects")
+            Log.i( TAG, "Route loaded $npoints, $nwpoints, $nsects, $dist")
             if (it.geometry.points.size > 1) {
-                //status = Status.Wait
                 var p0 = it.geometry.points[0]
                 it.geometry.points.take(10).forEachIndexed() { i, p ->
                     Log.i( TAG, "$i ${(Geo::distance)(p, p0).toInt()} ${(Geo::course)(p, p0).toInt()}")
@@ -70,8 +79,8 @@ class NavActivity : AppCompatActivity() {
             }
         }
         navigator.route = route
-        findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[drawables.size-1])
-        findViewById<TextView>(R.id.textView).text = "---"
+        directionInfo.setImageDrawable(drawables[drawables.size-1])
+        distanceInfo.text = "---"
         Log.i( TAG, "onResume")
     }
 
@@ -90,20 +99,17 @@ class NavActivity : AppCompatActivity() {
             if (location.speed != null) {
                 speedStr = "%,.1f".format(Locale.ENGLISH, location.speed)
             }
-            msg= "${pos.latitude},${pos.longitude} (${location.accuracy?.toInt()}) ${location.heading?.toInt()}, $speedStr"
-            findViewById<TextView>(R.id.statusView).text = msg
+            statusInfo.text = "${pos.latitude},${pos.longitude} (${location.accuracy?.toInt()}) ${location.heading?.toInt()}, $speedStr"
             val res = navigator.update(location)
 
-            // check for dup stat here...
-            //Toast.makeText(applicationContext, res.type.toString(), Toast.LENGTH_SHORT).show()
-            findViewById<TextView>(R.id.routeView).text = res.debugStr
+            routeInfo.text = res.debugStr
 
             when (res.type) {
                 Navigator.Result.ResultType.Ignore, Navigator.Result.ResultType.Finished,-> {
                     return
                 }
                 Navigator.Result.ResultType.LowAccuracy, Navigator.Result.ResultType.LowSpeed,-> {
-                    findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[drawables.size-1])
+                    directionInfo.setImageDrawable(drawables[drawables.size-1])
                     if (res.type != prevAnnouncedResult.type || (now - prevAnnouncedResultTime) >= ANNOUNCE_PROBLEM_PERIOD) {
                         var message = if(res.type == Navigator.Result.ResultType.LowAccuracy) "Низкая точность" else "Идите быстрее"
                         Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
@@ -123,15 +129,15 @@ class NavActivity : AppCompatActivity() {
                         else R.color.black
                     }
                     val dist = res.dist.toInt()
-                    findViewById<ImageView>(R.id.imageView).setColorFilter(ContextCompat.getColor(applicationContext, color), PorterDuff.Mode.SRC_IN);
-                    findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[dir])
+                    directionInfo.setColorFilter(ContextCompat.getColor(applicationContext, color), PorterDuff.Mode.SRC_IN);
+                    directionInfo.setImageDrawable(drawables[dir])
                     if (res.backJump) {
-                        findViewById<TextView>(R.id.textView).text = "$dist (<<<)"
+                        distanceInfo.text = "$dist (<<<)"
                     }
                     else if (res.jump != null) {
-                        findViewById<TextView>(R.id.textView).text = "$dist (${res.jump})"
+                        distanceInfo.text = "$dist (${res.jump})"
                     }
-                    else findViewById<TextView>(R.id.textView).text = dist.toString()
+                    else distanceInfo.text = dist.toString()
 
                     // announces
                     if (res.type != prevAnnouncedResult.type || res.status != prevAnnouncedResult.status
@@ -149,15 +155,16 @@ class NavActivity : AppCompatActivity() {
         }
     }
 
-    fun onTurn(view: View) {
-        // test director
+    fun onAction(view: View) {
+        /*
+        // test
         val seg = 360 / NCOURSE
         test_Dir = (test_Dir + 1) % NCOURSE
         findViewById<ImageView>(R.id.imageView).setImageDrawable(drawables[test_Dir])
         findViewById<TextView>(R.id.textView).text = (test_Dir * seg).toString()
         TTS.speak(announce[test_Dir])
         findViewById<TextView>(R.id.statusView).text = announce[test_Dir]
-
+    */
     }
 }
 

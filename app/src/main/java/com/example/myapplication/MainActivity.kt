@@ -164,7 +164,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun goDrugstore(view: View) {
-        //speak("Строим маршрут для движения в аптеку")
+        //speak("Ищем ближайшую аптеку")
         val msg = locator.search("аптека", {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
         speak(msg)
         Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
