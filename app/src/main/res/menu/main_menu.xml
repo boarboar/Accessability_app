@@ -16,6 +16,9 @@
             <item android:id="@+id/mute"
                 android:checkable="true"
                 android:title="Без звука" />
+            <item android:id="@+id/home"
+                android:title="Дом" />
+
         </menu>
 
     </item>

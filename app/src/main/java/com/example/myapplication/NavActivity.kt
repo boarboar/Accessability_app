@@ -144,7 +144,7 @@ class NavActivity : AppCompatActivity() {
                         || (now - prevAnnouncedResultTime) >= ANNOUNCE_MOVE_PERIOD) {
                         var message = if(res.status == Navigator.Status.LostRoute) "Отклонились!" else ""
                         message += "${announce[dir]}, $dist метров"
-                        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                         TTS.speak(message)
                         prevAnnouncedResult = res
                         prevAnnouncedResultTime = now
