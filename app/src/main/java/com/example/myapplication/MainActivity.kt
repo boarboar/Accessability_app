@@ -1,7 +1,9 @@
 package com.example.myapplication
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.*
@@ -27,6 +29,8 @@ class MainActivity : AppCompatActivity() {
     private var lastPressedUp : Long = 0 // in millis
     private lateinit var viewModel: MainViewModel
     private var ynDialog: YNDialogFragment? = null
+    private lateinit var sharedPref: SharedPreferences
+    private var isMute = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,9 +43,12 @@ class MainActivity : AppCompatActivity() {
         locator = Locator.getInstance(this)
         vibrator = Vibro(this)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        sharedPref = getPreferences(Context.MODE_PRIVATE)
+        isMute = sharedPref.getBoolean("is_mute", false)
+        TTS.mute(isMute)
         requestCallPermission()
     }
-
+    /*
     override fun onStart() {
         super.onStart()
         Log.i( TAG, "onStart")
@@ -51,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
         Log.i( TAG, "onStop")
     }
-
+    */
     override fun onResume() {
         super.onResume()
         locator.subscribeToLocationUpdate(this::onLocationUpdate)
@@ -72,6 +79,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater: MenuInflater = menuInflater
         inflater.inflate(R.menu.main_menu, menu)
+        menu.findItem(R.id.mute).isChecked = isMute
         return true
     }
 
@@ -89,6 +97,10 @@ class MainActivity : AppCompatActivity() {
             R.id.mute -> {
                 item.isChecked = !item.isChecked
                 TTS.mute(item.isChecked)
+                with (sharedPref.edit()) {
+                    putBoolean("is_mute", item.isChecked)
+                    apply()
+                }
                 true
             }
             else -> super.onOptionsItemSelected(item)
