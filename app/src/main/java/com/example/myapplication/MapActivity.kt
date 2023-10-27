@@ -30,22 +30,23 @@ class MapActivity : AppCompatActivity() {
                 /* tilt = */ 0.0f
             )
         )
-        /*
+        val imageProvider = ImageProvider.fromResource(this@MapActivity, R.drawable.ic_dollar_pin)
+
         val placemark = mapView.mapWindow.map.mapObjects.addPlacemark().apply {
             geometry = Point(59.920499, 30.497943)
-            setIcon(ImageProvider.fromResource(this@MapActivity, R.drawable.baseline_home_24))
+            setIcon(imageProvider)
             IconStyle().apply { anchor = PointF(0.5f, 1.0f) }
         }.apply {
             isDraggable = true
         }
-        */
 
+        /*
         val placemark = mapView.mapWindow.map.mapObjects.addPlacemark().apply {
             geometry = Point(59.920499, 30.497943)
             setIcon(ImageProvider.fromResource(this@MapActivity, R.drawable.baseline_home_24))
         }
-
-
+        */
+        //val placemarkObject = mapView.mapWindow.map.mapObjects.addPlacemark(Point(59.920499, 30.497943), imageProvider)
     }
 
     override fun onStart() {
