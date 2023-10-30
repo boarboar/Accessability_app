@@ -153,6 +153,7 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
         }
     }
 
+    var homeLocation = Point(59.920499, 30.497943) // Default home location
     private val PERMISSIONS_REQUEST_LOCATION = 1
     //private val DESIRED_ACCURACY = 5.0
     //private val MINIMAL_TIME: Long = 10000
@@ -191,6 +192,11 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
     private var onLocationUpdate : ((location: Location?) -> Unit)? = null
     var currentRoute : Route? = null
 
+    fun setHomeFromString(s: String?) {
+        s.let {
+            // todo = parse lat, non
+        }
+    }
 
     override fun onLocationUpdated(location: Location) {
         if(debugMode) {

@@ -59,7 +59,7 @@
         android:layout_marginEnd="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"
         android:background="@drawable/roundbutton"
-        android:contentDescription="Не сделано"
+        android:contentDescription="Домой на транспорте"
         android:onClick="goHomeByTransport"
         android:text="@string/btn_go_home_trans"
         android:textSize="96sp"

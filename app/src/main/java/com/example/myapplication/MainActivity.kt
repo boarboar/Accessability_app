@@ -20,7 +20,7 @@ import com.yandex.mapkit.location.Location
 class MainActivity : AppCompatActivity() {
     private val TAG = "MAIN"
     private val PERMISSIONS_REQUEST_CALL_PHONE = 2
-    private val HOME_LOCATION = Point(59.920499, 30.497943)
+    //private val HOME_LOCATION = Point(59.920499, 30.497943)
     private val VOL_UP_DELAY = 1000L
     private  lateinit var locator: Locator
     private lateinit var vibrator: Vibro
@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         sharedPref = getPreferences(Context.MODE_PRIVATE)
         isMute = sharedPref.getBoolean("is_mute", false)
+        locator.setHomeFromString(sharedPref.getString("home", null))
         TTS.mute(isMute)
         requestCallPermission()
     }
@@ -157,7 +158,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onTest(view: View) {
-        viewModel.requestAddress(HOME_LOCATION.longitude, HOME_LOCATION.latitude).observe(this) {
+        val home = locator.homeLocation
+        viewModel.requestAddress(home.longitude, home.latitude).observe(this) {
             if (it.success) {
                 speak(it.short)
                 Toast.makeText(applicationContext, "Address: ${it.long}", Toast.LENGTH_SHORT).show()
@@ -168,14 +170,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun goHome(view: View) {
+        val home = locator.homeLocation
         //speak("Строим маршрут для движения домой")
-        val msg = locator.makePedestrianRoute(HOME_LOCATION,  {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
+        val msg = locator.makePedestrianRoute(home,  {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
         speak(msg)
         Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
     }
 
     fun goHomeByTransport(view: View) {
-        val msg = locator.makeTransportRoute(HOME_LOCATION, {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
+        val home = locator.homeLocation
+        val msg = locator.makeTransportRoute(home, {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
         speak(msg)
         Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
     }
