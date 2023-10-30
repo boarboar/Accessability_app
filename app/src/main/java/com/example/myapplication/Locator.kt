@@ -193,8 +193,10 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
     var currentRoute : Route? = null
 
     fun setHomeFromString(s: String?) {
-        s.let {
-            // todo = parse lat, non
+        s?.let {
+            // parse lat, non
+            val coords = it.split(",").map { it.toDouble() }
+            homeLocation = Point(coords[0], coords[1])
         }
     }
 

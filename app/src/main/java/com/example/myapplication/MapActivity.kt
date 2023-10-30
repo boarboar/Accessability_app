@@ -1,5 +1,7 @@
 package com.example.myapplication
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -7,10 +9,11 @@ import com.yandex.mapkit.MapKitFactory
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.InputListener
-import com.yandex.mapkit.map.PlacemarkMapObject
 import com.yandex.mapkit.map.Map
+import com.yandex.mapkit.map.PlacemarkMapObject
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.runtime.image.ImageProvider
+
 
 class MapActivity : AppCompatActivity() {
 
@@ -23,6 +26,10 @@ class MapActivity : AppCompatActivity() {
         override fun onMapLongTap(map: Map, point: Point) {
             // Move placemark after long tap
             placemark.geometry = point
+            val data = Intent()
+            data.putExtra("home", "${point.latitude},${point.longitude}" )
+            setResult(Activity.RESULT_OK, data)
+            finish()
         }
 
         override fun onMapTap(map: Map, point: Point) = Unit
@@ -31,6 +38,8 @@ class MapActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         locator = Locator.getInstance(this)
+
+        //val str = intent.getStringExtra("home")
 
         MapKitFactory.initialize(this)
         setContentView(R.layout.activity_map)
@@ -46,15 +55,6 @@ class MapActivity : AppCompatActivity() {
             )
         )
         val imageProvider = ImageProvider.fromResource(this@MapActivity, R.drawable.ic_dollar_pin)
-        /*
-        placemark = mapView.mapWindow.map.mapObjects.addPlacemark().apply {
-            geometry = Point(59.920499, 30.497943)
-            setIcon(imageProvider)
-            IconStyle().apply { anchor = PointF(0.5f, 1.0f) }
-        }.apply {
-            isDraggable = true
-        }
-        */
 
         placemark = map.mapObjects.addPlacemark().apply {
             geometry = home

@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -10,6 +11,7 @@ import android.os.*
 import android.util.Log
 import android.view.*
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -31,6 +33,21 @@ class MainActivity : AppCompatActivity() {
     private var ynDialog: YNDialogFragment? = null
     private lateinit var sharedPref: SharedPreferences
     private var isMute = false
+    private val intentLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            // callback from MapActivity, store home soord settings
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.getStringExtra("home").let {
+                    Toast.makeText(this, it, Toast.LENGTH_SHORT)
+                        .show()
+                    with(sharedPref.edit()) {
+                        putString("home", it)
+                        apply()
+                    }
+                    locator.setHomeFromString(it)
+                }
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,8 +122,9 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.home -> {
-                val intent = Intent(this, MapActivity::class.java)
-                startActivity(intent)
+                //var intent = Intent(this, MapActivity::class.java)
+                //intent.putExtra("home", locator.stringFromHome());
+                intentLauncher.launch(Intent(this, MapActivity::class.java))
                 true
             }
             else -> super.onOptionsItemSelected(item)
