@@ -10,6 +10,7 @@ import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.map.CameraPosition
 import com.yandex.mapkit.map.InputListener
 import com.yandex.mapkit.map.Map
+import com.yandex.mapkit.map.MapObjectCollection
 import com.yandex.mapkit.map.PlacemarkMapObject
 import com.yandex.mapkit.mapview.MapView
 import com.yandex.runtime.image.ImageProvider
@@ -21,6 +22,7 @@ class MapActivity : AppCompatActivity() {
     private lateinit var map: Map
     private lateinit var placemark: PlacemarkMapObject
     private  lateinit var locator: Locator
+    private lateinit var routesCollection: MapObjectCollection
 
     private val inputListener = object : InputListener {
         override fun onMapLongTap(map: Map, point: Point) {
@@ -71,6 +73,12 @@ class MapActivity : AppCompatActivity() {
         }
 
         map.addInputListener(inputListener)
+
+        routesCollection = map.mapObjects.addCollection()
+
+        locator.loadRoute(false)?.let {
+            routesCollection.addPolyline(it.geometry)
+        }
     }
 
     override fun onStart() {
