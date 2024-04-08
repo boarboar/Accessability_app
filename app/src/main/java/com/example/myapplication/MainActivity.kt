@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.*
 import android.util.Log
 import android.view.*
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -33,6 +34,15 @@ class MainActivity : AppCompatActivity() {
     private var ynDialog: YNDialogFragment? = null
     private lateinit var sharedPref: SharedPreferences
     private var isMute = false
+    private val roundButtonsList =
+        intArrayOf(R.id.button6, R.id.button11, R.id.button7, R.id.button14,
+        R.id.button9, R.id.button13, R.id.button8, R.id.button12, R.id.button10, )
+    private val squareButtonsList =
+        intArrayOf(R.id.button6, R.id.button8, R.id.button9, R.id.button7,)
+    private var currentButton = -1
+    private var buttonsList = roundButtonsList
+    private var toast: Toast? = null
+
     private val intentLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             // callback from MapActivity, store home soord settings
@@ -65,7 +75,9 @@ class MainActivity : AppCompatActivity() {
         locator.setHomeFromString(sharedPref.getString("home", null))
         TTS.mute(isMute)
         requestCallPermission()
+        selectNextButton()
     }
+
     /*
     override fun onStart() {
         super.onStart()
@@ -106,10 +118,14 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.round_layout -> {
                 setContentView(round_view)
+                buttonsList = roundButtonsList
+                currentButton = -1
                 true
             }
             R.id.square_layout -> {
                 setContentView(square_view)
+                buttonsList = squareButtonsList
+                currentButton = -1
                 true
             }
             R.id.mute -> {
@@ -135,6 +151,20 @@ class MainActivity : AppCompatActivity() {
         TTS.speak(text)
     }
 
+    fun show(text: String) {
+        if (toast != null) {
+            toast!!.cancel()
+            toast = null
+        }
+        toast = Toast.makeText(this, text, Toast.LENGTH_SHORT)
+        toast!!.show()
+    }
+
+    fun speakAndShow(text: String) {
+        TTS.speak(text)
+        show(text)
+    }
+
     private fun requestCallPermission() {
         if (ContextCompat.checkSelfPermission(this,
                 "android.permission.CALL_PHONE"
@@ -153,7 +183,7 @@ class MainActivity : AppCompatActivity() {
             val pos = location.position
             msg= "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )"
         }
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        show(msg)
     }
 
     fun onHelp(view: View) {
@@ -172,7 +202,7 @@ class MainActivity : AppCompatActivity() {
     fun debugLocation(view: View) {
         vibrator.createOneShotVibrationUsingVibrationEffect(1000) // test vibration
         locator.debugMode = !locator.debugMode
-        Toast.makeText(applicationContext, "Locator debug is ${locator.debugMode}", Toast.LENGTH_SHORT).show()
+        show("Locator debug is ${locator.debugMode}")
     }
 
     fun onTest(view: View) {
@@ -180,9 +210,9 @@ class MainActivity : AppCompatActivity() {
         viewModel.requestAddress(home.longitude, home.latitude).observe(this) {
             if (it.success) {
                 speak(it.short)
-                Toast.makeText(applicationContext, "Address: ${it.long}", Toast.LENGTH_SHORT).show()
+                show("Address: ${it.long}")
             } else {
-                Toast.makeText(applicationContext, "Error: ${it.error}", Toast.LENGTH_LONG).show()
+                show("Error: ${it.error}")
             }
         }
     }
@@ -191,28 +221,24 @@ class MainActivity : AppCompatActivity() {
         val home = locator.homeLocation
         //speak("Строим маршрут для движения домой")
         val msg = locator.makePedestrianRoute(home,  {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
-        speak(msg)
-        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
+        speakAndShow(msg)
     }
 
     fun goHomeByTransport(view: View) {
         val home = locator.homeLocation
         val msg = locator.makeTransportRoute(home, {a -> onRouteResolve(a) } , {error -> onRouteResolveError(error)})
-        speak(msg)
-        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
+        speakAndShow(msg)
     }
 
     fun goDrugstore(view: View) {
         //speak("Ищем ближайшую аптеку")
         val msg = locator.search("аптека", {a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
-        speak(msg)
-        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+        speakAndShow(msg)
     }
 
     fun goTransport(view: View) {
         val msg = locator.search("остановка автобуса", {a1, a2 -> onLocationResolve(a1, a2, true) } , {error -> onLocationError(error)})
-        speak(msg)
-        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+        speakAndShow(msg)
     }
 
     fun callDoctor(view: View) {
@@ -248,12 +274,11 @@ class MainActivity : AppCompatActivity() {
             viewModel.requestAddress(pos.longitude, pos.latitude).observe(this) {
                 if (it.success) {
                     speak(it.short)
-                    Toast.makeText(applicationContext, "Address: ${it.long}", Toast.LENGTH_SHORT)
-                        .show()
+                    //show("Address: ${it.long}")
+                    Toast.makeText(this@MainActivity, "Address: ${it.long}", Toast.LENGTH_LONG).show()
                 } else {
                     speak("Ошибка при определении местоположения")
-                    Toast.makeText(applicationContext, "Error: ${it.error}", Toast.LENGTH_LONG)
-                        .show()
+                    show("Error: ${it.error}")
                 }
             }
         } else
@@ -268,8 +293,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onLocationError(error: String) {
-        speak(error)
-        Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
+        speakAndShow(error)
     }
 
     private fun onRouteResolve(a: String) {
@@ -281,14 +305,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onRouteResolveError(error: String) {
-        speak(error)
-        Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
+        speakAndShow(error)
     }
 
     // Volume UP
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         super.onKeyUp(keyCode, event)
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+            /*
             if(System.currentTimeMillis() - lastPressedUp < VOL_UP_DELAY) {
                 //Log.i("KEY", "VolUP")
                 callDoctor(this.round_view)
@@ -302,6 +326,17 @@ class MainActivity : AppCompatActivity() {
                 } else
                     lastPressedUp = System.currentTimeMillis() // wait next press
             }
+            */
+            if (ynDialog != null) {
+                // handle YES action
+                ynDialog!!.dismiss()
+                ynDialog!!.onYes()
+            } else {
+                if (currentButton != -1) {
+                    val button = findViewById<Button>(buttonsList[currentButton])
+                    button.callOnClick()
+                }
+            }
             return true
         }
         return false
@@ -310,10 +345,12 @@ class MainActivity : AppCompatActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         super.onKeyDown(keyCode, event)
         if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            // handle NO action
             if (ynDialog != null) {
+                // handle NO action
                 ynDialog!!.dismiss()
                 ynDialog!!.onNo()
+            } else {
+                selectNextButton()
             }
             return true
         }
@@ -334,5 +371,19 @@ class MainActivity : AppCompatActivity() {
             ynDialog = null
         }
         ynDialog!!.show(supportFragmentManager)
+    }
+
+    private fun selectNextButton() {
+        if (currentButton != -1) {
+            val button = findViewById<Button>(buttonsList[currentButton])
+            button.setTextColor(application.resources.getColor(R.color.white));
+        }
+        currentButton += 1
+        if (currentButton >= buttonsList.size) {
+            currentButton = 0
+        }
+        val button = findViewById<Button>(buttonsList[currentButton])
+        button.setTextColor(application.resources.getColor(R.color.black));
+        speakAndShow(button.contentDescription.toString())
     }
 }

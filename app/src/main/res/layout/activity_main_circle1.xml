@@ -91,7 +91,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/roundbutton"
-        android:contentDescription="Помощь"
+        android:contentDescription="Определить местонахождение"
         android:onClick="whereAmI"
         android:text="HELP"
         android:textSize="96sp"
