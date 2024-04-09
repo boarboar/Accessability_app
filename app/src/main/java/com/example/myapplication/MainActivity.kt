@@ -178,12 +178,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onLocationUpdate(location: Location?) {
-        var msg = "Loc not avail"
-        if (location != null) {
-            val pos = location.position
-            msg= "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )"
+        if (locator.debugMode) {
+            var msg = "Loc not avail"
+            if (location != null) {
+                val pos = location.position
+                msg = "${pos.latitude},${pos.longitude} ( ${location.accuracy?.toInt()} )"
+            }
+            show(msg)
         }
-        show(msg)
     }
 
     fun onHelp(view: View) {
@@ -308,39 +310,6 @@ class MainActivity : AppCompatActivity() {
         speakAndShow(error)
     }
 
-    // Volume UP
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        super.onKeyUp(keyCode, event)
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            /*
-            if(System.currentTimeMillis() - lastPressedUp < VOL_UP_DELAY) {
-                //Log.i("KEY", "VolUP")
-                callDoctor(this.round_view)
-                lastPressedUp = 0
-            } else {
-                // handle YES action
-                if (ynDialog != null) {
-                    ynDialog!!.dismiss()
-                    ynDialog!!.onYes()
-                    lastPressedUp = 0
-                } else
-                    lastPressedUp = System.currentTimeMillis() // wait next press
-            }
-            */
-            if (ynDialog != null) {
-                // handle YES action
-                ynDialog!!.dismiss()
-                ynDialog!!.onYes()
-            } else {
-                if (currentButton != -1) {
-                    val button = findViewById<Button>(buttonsList[currentButton])
-                    button.callOnClick()
-                }
-            }
-            return true
-        }
-        return false
-    }
     // Volume DN
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         super.onKeyDown(keyCode, event)
@@ -351,6 +320,18 @@ class MainActivity : AppCompatActivity() {
                 ynDialog!!.onNo()
             } else {
                 selectNextButton()
+            }
+            return true
+        } else  if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+            if (ynDialog != null) {
+                // handle YES action
+                ynDialog!!.dismiss()
+                ynDialog!!.onYes()
+            } else {
+                if (currentButton != -1) {
+                    val button = findViewById<Button>(buttonsList[currentButton])
+                    button.callOnClick()
+                }
             }
             return true
         }
