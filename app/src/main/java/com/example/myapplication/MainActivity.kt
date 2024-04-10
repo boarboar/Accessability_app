@@ -189,11 +189,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onHelp(view: View) {
-        //Toast.makeText(applicationContext, "Помощь", Toast.LENGTH_SHORT).show()
-        //speak("Рассказываем, как пользоваться приложением")
-        // Test - run NAV
-        val intent = Intent(this, NavActivity::class.java)
-        startActivity(intent)
+        speakAndShow("Рассказываем, как пользоваться приложением")
     }
 
     fun notImplemented(view: View) {
@@ -208,6 +204,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onTest(view: View) {
+        /*
         val home = locator.homeLocation
         viewModel.requestAddress(home.longitude, home.latitude).observe(this) {
             if (it.success) {
@@ -217,6 +214,10 @@ class MainActivity : AppCompatActivity() {
                 show("Error: ${it.error}")
             }
         }
+        */
+        // Test - continue navigation
+        val intent = Intent(this, NavActivity::class.java)
+        startActivity(intent)
     }
 
     fun goHome(view: View) {
@@ -258,15 +259,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun whereAmI(view: View) {
-        /*
-        Toast.makeText(applicationContext, "Где я", Toast.LENGTH_SHORT).show()
-        speak("Определем местоположение и смотрим, что есть рядом")
-    */
     /*
         // Yandex implementation
         val msg = locator.requestAddress1({a1, a2 -> onLocationResolve(a1, a2) } , {error -> onLocationError(error)})
-        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
-        speak(msg)
      */
         // OSM implementation
         val loc = locator.location
