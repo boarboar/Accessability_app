@@ -42,10 +42,10 @@ class TTS private constructor(context: Context) : TextToSpeech.OnInitListener {
                 Log.e(TAG, "The Language specified is not supported!")
             } else {
                 ttsEnabled = true
-                Log.i(TAG, "Enabled")
+                Log.i(TAG, "Enabled ($status)")
             }
         } else {
-            Log.e(TAG, "Initilization Failed!")
+            Log.e(TAG, "Initilization failed with $status !")
         }
     /*
         if (!ttsEnabled) {
