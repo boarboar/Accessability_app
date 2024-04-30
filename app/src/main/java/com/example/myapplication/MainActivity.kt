@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onHelp(view: View) {
-        speakAndShow("Рассказываем, как пользоваться приложением")
+        speakAndShow(getString(R.string.app_help))
     }
 
     fun notImplemented(view: View) {
