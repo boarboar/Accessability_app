@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Помошник слабовидящих</string>
+    <string name="app_name">Помощник слабовидящих</string>
     <string name="btn_gohome_text"><font size="128">Д</font>\n\<font size="12">(идем домой!)</font></string>
     <string name="btn_whereami_text"><font size="128">Г</font>\n\<font size="12">(где я?)</font></string>
     <string name="btn_drugstore_text"><font size="128">A</font>\n\<font size="12">(аптека)</font></string>
