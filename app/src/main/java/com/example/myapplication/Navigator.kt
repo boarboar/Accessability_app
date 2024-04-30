@@ -17,7 +17,7 @@ class Navigator {
 
     enum class Status { NoRoute, Wait, OnRoute, LostRoute, Finished }
     private var status = Status.NoRoute
-    private val D_ACC =  6.0  // Accuracy - should be 4.
+    private val D_ACC =  10.0  // Accuracy - should be 4.
     private val D_TARG = D_ACC  // Arrival
     private val D_SNAP = D_ACC  // Close to route
     private val D_LOST = D_SNAP * 1.5  // Lost route

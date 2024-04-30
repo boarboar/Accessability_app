@@ -162,7 +162,7 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
     private val MINIMAL_TIME = 2000L // 2sec
     //private val MINIMAL_DISTANCE = 1.5 // 1.5m
     private val MINIMAL_DISTANCE = 0.0
-    private val USE_IN_BACKGROUND = false
+    private val USE_IN_BACKGROUND = true
     private val TRANSPORT_ROUTE_FILE = "SavedTransportRoute"
     private val PEDESTRIAN_ROUTE_FILE = "SavedPedestrianRoute"
     private val TAG = "LOC"
@@ -238,7 +238,7 @@ class Locator private constructor(private val context: AppCompatActivity) : Loca
         MapKitFactory.getInstance().onStart()
         locationManager.subscribeForLocationUpdates(
             DESIRED_ACCURACY, MINIMAL_TIME, MINIMAL_DISTANCE,
-            USE_IN_BACKGROUND, FilteringMode.OFF,
+            USE_IN_BACKGROUND, FilteringMode.ON,
             this
         )
         onLocationUpdate = listener
