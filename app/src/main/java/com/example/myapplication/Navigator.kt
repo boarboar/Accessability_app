@@ -37,7 +37,7 @@ class Navigator {
             status = if (value == null || value.geometry.points.size < 2) Status.NoRoute else Status.Wait
             ipoint = 0
             prev_itarg = 0
-            points =  route!!.geometry.points
+            points = if (value != null) route!!.geometry.points else listOf()
         }
 
     fun getDistanceTo(p: Point) = (Geo::distance)(pos, p)
